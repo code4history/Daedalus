@@ -1,0 +1,10 @@
+{
+  "name": "@c4h/daedalus",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "World-file fitting helpers for Maplat V3.1.",
+  "engines": {
+    "node": ">=20"
+  }
+}
