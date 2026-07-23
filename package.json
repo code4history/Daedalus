@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "World-file fitting helpers for Maplat V3.1.",
+  "license": "MIT",
   "engines": {
     "node": ">=20"
   }
