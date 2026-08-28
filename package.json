@@ -18,10 +18,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:types": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --skipLibCheck tests/api-smoke.test.ts",
+    "test:types": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --skipLibCheck tests/api-smoke.test.ts tests/contract-freeze.test.ts",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage"
   },
