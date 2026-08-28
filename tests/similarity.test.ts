@@ -30,10 +30,16 @@ describe('similarity closed-form Helmert fitting', () => {
     expect(wf.yScale).toBeCloseTo(1.5, 9);
     expect(wf.yOrigin).toBeCloseTo(-50.0, 9);
 
+    // m0-t2 以降の契約（設計 v1.2 §3.7 分岐 #4 / §4.2.1）:
+    // この fixture は similarity が数値許容内で厳密適合する（実測 SSE4=1.0097419586828951e-28 ≤
+    // εSSE=3.1589666105778918e-24 ∴ Z(SSE4) 成立）ため affine は採用されず、
+    // holdout 未指定のため validationSkipped が併発する。Helmert 係数 6 値は不変。
     expect(result.similarityOnly).toBe(true);
-    expect(result.status).toBe('ok');
     expect(result.qualityGate).toBe('adoptable');
-    expect(result.warnings).toHaveLength(0);
+    expect(result.status).toBe('ok_with_warnings');
+    expect(result.warnings.map(w => w.code).sort()).toEqual(
+      ['affineRejectedNonImproving', 'validationSkipped']
+    );
   });
 
   test('AC-m0-2: WorldFile origin is left-top corner (0,0), not center (0.5pts, 4pts)', () => {
