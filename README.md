@@ -4,7 +4,7 @@
 
 - Input: GCPs plus a single CRS
 - Output: `world_file_basic` and post-shear refinement
-- Runtime: Node.js and browser
+- Runtime: Node.js（browser runtime は未検証・Cycle 1 の既知欠落。Pure TS で browser 動作を意図するが、検証は後続）
 - Scope: fitting only, not CRS candidate lookup
 
 ## 公開 API
@@ -105,3 +105,13 @@ Cycle 1 の過適合抑制のための初期ヒューリスティック（仮仕
 - LOO（leave-one-out）validation（未指定 holdout は `validationSkipped`）
 - 一般形 `criticalF`（df1≠2 の不完全ベータ）
 - weight / robust fitting / 逆写像 RMS の高度化 / アンチメリディアン・極域
+
+## 関連文書
+
+- [CRS 推定ライブラリ群 仮仕様正本](../docs/superpowers/specs/2026-08-27-c1-crs-libs-provisional-spec.md) —
+  本 package の観測契約・数値挙動が集約されている（**仮仕様**であり人間承認済みの確定仕様ではない）。
+- [mock transformer 契約文書](../docs/superpowers/specs/2026-08-28-mock-transformer-contract.md) —
+  `src/testkit/` が提供する mock adapter の契約。
+
+上記リンクは**親リポジトリ（monorepo）を checkout したときにのみ解決する**。
+本 repository を単体で clone した場合、`../docs/` は存在しない。
