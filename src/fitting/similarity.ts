@@ -6,7 +6,7 @@ export function fitWorldFile(
   opts?: FitOptions
 ): FitResult {
   const n = gcps.length;
-  
+
   // 1. Basic unusable conditions
   if (n < 2) {
     return {
@@ -39,7 +39,7 @@ export function fitWorldFile(
     if (geo[1] < minLat) minLat = geo[1];
     if (geo[1] > maxLat) maxLat = geo[1];
   }
-  
+
   // check unsupported axis order
   if (opts?.geoBasis && 'axisOrder' in opts.geoBasis) {
      if ((opts.geoBasis as any).axisOrder === 'lat-lon') {
@@ -95,7 +95,7 @@ export function fitWorldFile(
     sumX += geo[0];
     sumY += geo[1];
   }
-  
+
   const uBar = sumU / n;
   const vBar = sumV / n;
   const xBar = sumX / n;
@@ -106,7 +106,7 @@ export function fitWorldFile(
   let sumVPrimeYPrime = 0;
   let sumUPrimeYPrime = 0;
   let sumVPrimeXPrime = 0;
-  
+
   let Suu = 0, Svv = 0, Suv = 0;
 
   for (let i = 0; i < n; i++) {
@@ -117,12 +117,12 @@ export function fitWorldFile(
     const yPrime = geo[1] - yBar;
 
     D += uPrime * uPrime + vPrime * vPrime;
-    
+
     sumUPrimeXPrime += uPrime * xPrime;
     sumVPrimeYPrime += vPrime * yPrime;
     sumUPrimeYPrime += uPrime * yPrime;
     sumVPrimeXPrime += vPrime * xPrime;
-    
+
     Suu += uPrime * uPrime;
     Svv += vPrime * vPrime;
     Suv += uPrime * vPrime;
@@ -139,9 +139,9 @@ export function fitWorldFile(
       warnings: [],
     };
   }
-  
+
   const warnings: FitWarning[] = [];
-  
+
   // 3. n=2 preview condition
   if (n === 2) {
       warnings.push({code: 'insufficientPointCount'});
@@ -152,16 +152,16 @@ export function fitWorldFile(
       const suu = Suu / n;
       const svv = Svv / n;
       const suv = Suv / n;
-      
+
       const trace = suu + svv;
       const det = suu * svv - suv * suv;
       const discriminant = Math.sqrt(Math.max(0, trace * trace - 4 * det));
-      
+
       const lambda1 = (trace + discriminant) / 2;
       const lambda2 = (trace - discriminant) / 2;
-      
+
       const threshold = opts?.collinearityThreshold ?? 0.01;
-      
+
       // We check lambda1 > 0 to avoid division by zero, though D > 0 should ensure trace > 0
       if (lambda1 > 0 && (lambda2 / lambda1) <= threshold) {
           warnings.push({code: 'nearCollinearSource'});
@@ -183,7 +183,7 @@ export function fitWorldFile(
     yScale: a,
     yOrigin: ty,
   };
-  
+
   let sse = 0;
   for(let i=0; i<n; i++) {
       const u = gcps[i].pixel[0];
@@ -215,7 +215,7 @@ export function fitWorldFile(
       }
   }
   const rmsPixels = scale2 > 0 ? Math.sqrt(sumSqErrPixels / n) : 0;
-  
+
   // 6. status and qualityGate
   const qualityGate = n === 2 ? 'preview' : 'adoptable';
   const status = warnings.length > 0 ? 'ok_with_warnings' : 'ok';
