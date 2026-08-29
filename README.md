@@ -1,117 +1,131 @@
 # Daedalus
 
+[![CI](https://github.com/code4history/Daedalus/actions/workflows/test.yml/badge.svg)](https://github.com/code4history/Daedalus/actions/workflows/test.yml)
+
 `@c4h/daedalus` fits world-file parameters for a known CRS.
 
 - Input: GCPs plus a single CRS
 - Output: `world_file_basic` and post-shear refinement
-- Runtime: Node.js と browser。browser は**行ごとに実績が違う**ため 3 段に分けて書く（m3-t1）。**(1) バンドル可能性 = 検証済**: Teiresias の `pnpm run verify:demo-bundle`（`scripts/verify-demo-browser-bundle.mjs`）が demo build の出力チャンクを走査し、Node 固有指定子が残っていないことと Daedalus 由来コードが実在することを機械検証する（CI から継続的に走る）。**(2) 実ブラウザでの実行 = 観測済（「検証済」ではない）**: 2026-08-29 に Teiresias デモを実ブラウザで **1 回観測**した（m3-t1/AC-16）。1 回の観測は自動検査ではない ∴ 回帰を守らない。**(3) CI 上での継続的・自動のブラウザ実行と canvas ドラッグの自動操作 = 未検証**（Cycle 1 の既知欠落）。`Daedalus/src` は本件のために 1 バイトも変更していない（m0 凍結を解いていない）
+- Runtime: Node.js and browser. The browser story differs line by line, so it is written in three tiers (m3-t1). **(1) Bundlability = verified**: Teiresias' `pnpm run verify:demo-bundle` (`scripts/verify-demo-browser-bundle.mjs`) scans the output chunks of the demo build and mechanically verifies that no Node-specific specifier remains and that Daedalus-derived code is actually present (it runs continuously from CI). **(2) Execution in a real browser = observed (not "verified")**: the Teiresias demo was observed **once** in a real browser on 2026-08-29 (m3-t1/AC-16). A single observation is not an automated check, so it does not guard against regressions. **(3) Continuous, automated browser execution on CI and automated canvas drag operation = unverified** (a known gap of Cycle 1). `Daedalus/src` has not been changed by a single byte for this work (the m0 freeze has not been lifted).
 - Scope: fitting only, not CRS candidate lookup
 
-## 公開 API
+日本語のREADMEは[こちら](./README.ja.md)。
+
+## Public API
 
 ```ts
 import { fitWorldFile } from '@c4h/daedalus';
 const result = fitWorldFile(gcps, options);
 ```
 
-`fitWorldFile` と型のみが公開である。affine / F 検定の helper は package-internal であり
-`src/index.ts` からは export しない。
+Only `fitWorldFile` and the types are public. The affine / F-test helpers are package-internal and
+are not exported from `src/index.ts`.
 
 ### `FitOptions`
 
-| option | 既定値 | 有効範囲 | 範囲外・非有限のとき |
+| option | default | valid range | out of range / non-finite |
 |---|---|---|---|
-| `geoBasis` | `lonlat_deg` / `lon-lat` 相当 | `lonlat_deg`(`lon-lat`) / `planar_xy`(`xy`) | `axisOrder: 'lat-lon'` は `unsupportedAxisOrder` で `unusable` |
+| `geoBasis` | equivalent to `lonlat_deg` / `lon-lat` | `lonlat_deg`(`lon-lat`) / `planar_xy`(`xy`) | `axisOrder: 'lat-lon'` becomes `unusable` with `unsupportedAxisOrder` |
 | `debug` | `false` | boolean | — |
-| `collinearityThreshold` | `0.01` | 閉区間 `[0,1]` | 既定値へ正規化（warning は追加しない） |
-| `alpha` | `0.05` | **開区間** `(0,1)` | `0` / `1` を含む範囲外と非有限は既定値へ正規化 |
-| `minRelativeImprovement` | `0.01` | 閉区間 `[0,1]` | 既定値へ正規化 |
-| `normalizeEpsilonMeters` | `100.0` | 正の実数 | — |
-| `holdout` | 未指定 | `GcpPair[]` | 非空 holdout に非有限 pixel/geo が 1 つでもあれば入力不正 |
+| `collinearityThreshold` | `0.01` | closed interval `[0,1]` | normalized to the default (no warning is added) |
+| `alpha` | `0.05` | **open** interval `(0,1)` | out of range including `0` / `1`, and non-finite values, are normalized to the default |
+| `minRelativeImprovement` | `0.01` | closed interval `[0,1]` | normalized to the default |
+| `normalizeEpsilonMeters` | `100.0` | positive real number | — |
+| `holdout` | unspecified | `GcpPair[]` | a non-empty holdout containing even one non-finite pixel/geo value is an invalid input |
 
-`collinearityThreshold` の `0` は「固有値比が厳密に 0 の完全共線だけを skip」する端点、
-`1` は「有限な固有値比を全て skip」する明示設定である。
-`minRelativeImprovement` の `0` は統計 gate のみで採否を決める設定、`1` は training SSE の
-完全除去だけを許す設定である。
+For `collinearityThreshold`, `0` is the endpoint that "skips only perfectly collinear inputs whose
+eigenvalue ratio is exactly 0", and `1` is the explicit setting that "skips every finite eigenvalue ratio".
+For `minRelativeImprovement`, `0` is the setting that decides adoption by the statistical gate alone,
+and `1` is the setting that only allows complete elimination of the training SSE.
 
-### 返却値の観測契約
+### Observation contract of the return value
 
-| field | 内容 |
+| field | content |
 |---|---|
-| `status` | warning が 1 件以上なら `ok_with_warnings`、0 件なら `ok`。入力不正は `insufficient` |
-| `qualityGate` | n=2 は `preview`、入力不正は `unusable`、それ以外は `adoptable` |
-| `worldFile` | 選択モデル（affine 採用時は affine、不採用時は similarity）。入力不正は `null` |
-| `similarityOnly` | affine を採用したときのみ `false` |
-| `rmsMeters` | **選択モデル**の training 側 1 点あたり 2D 距離 RMS = `sqrt(SSE / n)`。入力不正は `null` |
-| `rmsPixels` | 選択モデルの逆写像による pixel 側 RMS |
-| `warnings` | 下表のコード。`affineRejectedNonImproving` には不採用理由が `detail` に入る |
-| `debug` | `options.debug` が真のときのみ存在（下記） |
+| `status` | `ok_with_warnings` if there is at least one warning, `ok` if there are none. An invalid input gives `insufficient` |
+| `qualityGate` | `preview` for n=2, `unusable` for an invalid input, `adoptable` otherwise |
+| `worldFile` | the selected model (affine when affine is adopted, similarity when it is not). `null` for an invalid input |
+| `similarityOnly` | `false` only when affine is adopted |
+| `rmsMeters` | the per-point 2D distance RMS on the training side of the **selected model** = `sqrt(SSE / n)`. `null` for an invalid input |
+| `rmsPixels` | the pixel-side RMS obtained by the inverse mapping of the selected model |
+| `warnings` | the codes in the table below. For `affineRejectedNonImproving`, the reason for rejection is put in `detail` |
+| `debug` | present only when `options.debug` is truthy (see below) |
 
-### warning コードと判定順序
+### Warning codes and evaluation order
 
-判定は上から順に評価し、最初に該当した分岐で確定する。
+The conditions are evaluated from the top, and the first matching branch determines the result.
 
-| # | 条件 | `similarityOnly` | worldFile | qualityGate | warnings |
+| # | condition | `similarityOnly` | worldFile | qualityGate | warnings |
 |---|---|---|---|---|---|
-| 0 | n<2 / training または非空 holdout の非有限 pixel・geo / 全 training pixel 一致 / `L_geo < normalizeEpsilonMeters` / `axisOrder: 'lat-lon'` | `true` | `null` | `unusable` | 空（axisOrder のみ `unsupportedAxisOrder`） |
+| 0 | n<2 / non-finite pixel or geo in training or in a non-empty holdout / all training pixels identical / `L_geo < normalizeEpsilonMeters` / `axisOrder: 'lat-lon'` | `true` | `null` | `unusable` | empty (only axisOrder gives `unsupportedAxisOrder`) |
 | 1 | n=2 | `true` | similarity | `preview` | `insufficientPointCount`, `affineSkippedInsufficientDof` |
-| 2 | n=3,4 | `true` | similarity | `adoptable` | `affineSkippedInsufficientDof`（共線なら `nearCollinearSource` も） |
-| 3 | n>=5 かつ λ2/λ1 <= `collinearityThreshold` | `true` | similarity | `adoptable` | `nearCollinearSource`, `affineSkippedCollinear` |
-| 4 | n>=5 かつ affine 解なし / 非有限 / 負の改善 / similarity が数値許容内で厳密適合 | `true` | similarity | `adoptable` | `affineRejectedNonImproving`（+ `validationSkipped`※） |
-| 5 | n>=5 かつ F gate 不成立 | `true` | similarity | `adoptable` | `affineRejectedNonImproving`（+ `validationSkipped`※） |
-| 6 | n>=5 かつ相対改善 gate 不成立 | `true` | similarity | `adoptable` | `affineRejectedNonImproving`（+ `validationSkipped`※） |
-| 7 | n>=5 かつ holdout RMS 悪化 | `true` | similarity | `adoptable` | `affineRejectedNonImproving`（detail に holdout 記載） |
-| 8 | n>=5 かつ全 gate 通過 | `false` | affine | `adoptable` | `validationSkipped`※ |
+| 2 | n=3,4 | `true` | similarity | `adoptable` | `affineSkippedInsufficientDof` (plus `nearCollinearSource` when collinear) |
+| 3 | n>=5 and λ2/λ1 <= `collinearityThreshold` | `true` | similarity | `adoptable` | `nearCollinearSource`, `affineSkippedCollinear` |
+| 4 | n>=5 and no affine solution / non-finite / negative improvement / similarity already fits exactly within numerical tolerance | `true` | similarity | `adoptable` | `affineRejectedNonImproving` (+ `validationSkipped`*) |
+| 5 | n>=5 and the F gate does not hold | `true` | similarity | `adoptable` | `affineRejectedNonImproving` (+ `validationSkipped`*) |
+| 6 | n>=5 and the relative improvement gate does not hold | `true` | similarity | `adoptable` | `affineRejectedNonImproving` (+ `validationSkipped`*) |
+| 7 | n>=5 and the holdout RMS gets worse | `true` | similarity | `adoptable` | `affineRejectedNonImproving` (the holdout is described in `detail`) |
+| 8 | n>=5 and every gate passes | `false` | affine | `adoptable` | `validationSkipped`* |
 
-※ `validationSkipped` は **affine 評価に到達（n>=5 かつ非共線）かつ `holdout` 未指定/空**のとき、
-affine 採用可否にかかわらず必ず発出する。n<5 と共線 skip では holdout 検証に到達しないため発出しない。
+\* `validationSkipped` is always emitted when **affine evaluation is reached (n>=5 and not collinear) and
+`holdout` is unspecified/empty**, regardless of whether affine is adopted. For n<5 and for the collinear
+skip, holdout validation is never reached, so it is not emitted.
 
-### affine 採用ゲート
+### The affine adoption gate
 
-similarity（4 パラメータ）は affine（6 パラメータ）の制約部分モデルなので `df1 = 2` は常に成り立ち、
-affine の残差自由度は `df2 = 2n-6` である。採用は次の**両方**を満たす場合のみ。
+Similarity (4 parameters) is a constrained submodel of affine (6 parameters), so `df1 = 2` always holds
+and the residual degrees of freedom of affine are `df2 = 2n-6`. Affine is adopted only when **both** of
+the following hold.
 
-1. **F gate**: `F > criticalF(alpha, 2, 2n-6)`。`F = ((SSE4-SSE6)/2) / (SSE6/(2n-6))`。
+1. **F gate**: `F > criticalF(alpha, 2, 2n-6)`, where `F = ((SSE4-SSE6)/2) / (SSE6/(2n-6))` and
    `criticalF(alpha, 2, df2) = (df2/2)·(alpha^(-2/df2) - 1)`
-2. **相対改善 gate**: `(SSE4-SSE6)/SSE4 >= minRelativeImprovement`
+2. **Relative improvement gate**: `(SSE4-SSE6)/SSE4 >= minRelativeImprovement`
 
-`holdout` を指定した場合はさらに `holdoutRmsAffine <= holdoutRmsSimilarity` を要求する。
+When `holdout` is specified, `holdoutRmsAffine <= holdoutRmsSimilarity` is required in addition.
 
-**SSE の数値的ゼロ**は厳密比較ではなく許容つきで判定する（仕様正本の「数値許容内の厳密適合」）。
+**Numerical zero of the SSE** is judged with a tolerance rather than by strict comparison
+(the "exact fit within numerical tolerance" of the provisional specification).
 
 ```
-epsSSE = 1024 · Number.EPSILON² · Σ(X² + Y²)      （和は training GCP の geo 座標）
+epsSSE = 1024 · Number.EPSILON² · Σ(X² + Y²)      (the sum is over the geo coordinates of the training GCPs)
 Z(s)   = (s <= epsSSE)
 ```
 
-- `Z(SSE4)`: similarity が既に許容内で厳密適合 ∴ 改善余地なし。F を評価せず不採用（#4）
-- `Z(SSE6)` かつ `¬Z(SSE4)`: `F = +Infinity` として F gate を通す
+- `Z(SSE4)`: similarity already fits exactly within the tolerance, so there is no room for improvement.
+  F is not evaluated and affine is rejected (#4)
+- `Z(SSE6)` and `¬Z(SSE4)`: the F gate is passed by treating `F = +Infinity`
 
-`alpha = 0.05` / `minRelativeImprovement = 0.01` / 安全係数 `1024` は実データで較正した値ではなく、
-Cycle 1 の過適合抑制のための初期ヒューリスティック（仮仕様）である。
+`alpha = 0.05`, `minRelativeImprovement = 0.01` and the safety factor `1024` are not values calibrated
+against real data; they are initial heuristics (a provisional specification) for suppressing overfitting
+in Cycle 1.
 
-### `debug`（`options.debug` が真のときのみ）
+### `debug` (only when `options.debug` is truthy)
 
-| field | 存在条件 |
+| field | condition for presence |
 |---|---|
-| `sse` / `mse` | 常に（**選択モデル**の training SSE と `sse/n`） |
-| `sseSimilarity` / `sseZeroTolerance` | affine 評価に到達したとき（#4〜#8） |
-| `sseAffine` | affine を計算できたとき |
-| `fStatistic` / `criticalF` / `relativeImprovement` | F gate を評価したとき |
-| `holdoutRmsSimilarity` / `holdoutRmsAffine` | `holdout` を指定して検証に到達したとき |
+| `sse` / `mse` | always (the training SSE of the **selected model** and `sse/n`) |
+| `sseSimilarity` / `sseZeroTolerance` | when affine evaluation is reached (#4 to #8) |
+| `sseAffine` | when affine could be computed |
+| `fStatistic` / `criticalF` / `relativeImprovement` | when the F gate was evaluated |
+| `holdoutRmsSimilarity` / `holdoutRmsAffine` | when `holdout` was specified and validation was reached |
 
-### 非目標（Cycle 1）
+### Non-goals (Cycle 1)
 
-- LOO（leave-one-out）validation（未指定 holdout は `validationSkipped`）
-- 一般形 `criticalF`（df1≠2 の不完全ベータ）
-- weight / robust fitting / 逆写像 RMS の高度化 / アンチメリディアン・極域
+- LOO (leave-one-out) validation (an unspecified holdout gives `validationSkipped`)
+- The general form of `criticalF` (the incomplete beta function for df1≠2)
+- Weights / robust fitting / more advanced inverse-mapping RMS / antimeridian and polar regions
 
-## 関連文書
+## Related documents
 
-- [CRS 推定ライブラリ群 仮仕様正本](../docs/superpowers/specs/2026-08-27-c1-crs-libs-provisional-spec.md) —
-  本 package の観測契約・数値挙動が集約されている（**仮仕様**であり人間承認済みの確定仕様ではない）。
-- [mock transformer 契約文書](../docs/superpowers/specs/2026-08-28-mock-transformer-contract.md) —
-  `src/testkit/` が提供する mock adapter の契約。
+- [Provisional specification of the CRS estimation libraries](../docs/superpowers/specs/2026-08-27-c1-crs-libs-provisional-spec.md) —
+  the observation contract and the numerical behaviour of this package are collected there
+  (it is a **provisional specification**, not a finalized specification approved by a human).
+- [Mock transformer contract](../docs/superpowers/specs/2026-08-28-mock-transformer-contract.md) —
+  the contract of the mock adapter provided by `src/testkit/`.
 
-上記リンクは**親リポジトリ（monorepo）を checkout したときにのみ解決する**。
-本 repository を単体で clone した場合、`../docs/` は存在しない。
+The links above **resolve only when the parent repository (the monorepo) is checked out**.
+When this repository is cloned on its own, `../docs/` does not exist.
+
+## License
+
+MIT License. See [LICENSE](./LICENSE).

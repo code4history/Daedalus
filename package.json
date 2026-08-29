@@ -1,6 +1,6 @@
 {
   "name": "@c4h/daedalus",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -13,8 +13,17 @@
     }
   },
   "description": "World-file fitting helpers for Maplat V3.1.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/code4history/Daedalus.git"
+  },
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/code4history/Daedalus/issues"
+  },
+  "homepage": "https://github.com/code4history/Daedalus#readme",
   "engines": {
+    "pnpm": ">=10",
     "node": ">=20"
   },
   "scripts": {
