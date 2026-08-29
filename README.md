@@ -4,7 +4,7 @@
 
 - Input: GCPs plus a single CRS
 - Output: `world_file_basic` and post-shear refinement
-- Runtime: Node.js（browser runtime は未検証・Cycle 1 の既知欠落。Pure TS で browser 動作を意図するが、検証は後続）
+- Runtime: Node.js と browser。browser は**行ごとに実績が違う**ため 3 段に分けて書く（m3-t1）。**(1) バンドル可能性 = 検証済**: Teiresias の `pnpm run verify:demo-bundle`（`scripts/verify-demo-browser-bundle.mjs`）が demo build の出力チャンクを走査し、Node 固有指定子が残っていないことと Daedalus 由来コードが実在することを機械検証する（CI から継続的に走る）。**(2) 実ブラウザでの実行 = 観測済（「検証済」ではない）**: 2026-08-29 に Teiresias デモを実ブラウザで **1 回観測**した（m3-t1/AC-16）。1 回の観測は自動検査ではない ∴ 回帰を守らない。**(3) CI 上での継続的・自動のブラウザ実行と canvas ドラッグの自動操作 = 未検証**（Cycle 1 の既知欠落）。`Daedalus/src` は本件のために 1 バイトも変更していない（m0 凍結を解いていない）
 - Scope: fitting only, not CRS candidate lookup
 
 ## 公開 API
