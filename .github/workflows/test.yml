@@ -1,0 +1,35 @@
+name: CI
+
+# ブランチ非限定（Atlas 前例と同一）∴ branches キーを持たない。
+on:
+  push:
+  pull_request:
+
+# Daedalus は依存を 1 件も持たない（dependencies キー自体が無い）∴ 単体 checkout で完結する。
+# 兄弟 checkout（m3-t1 設計 §6.4）は不要である。デモを持たないため deploy.yml も置かない
+# （HR-m3-007 の「Pages にデプロイする設定〔あれば〕」の条件を満たさない。設計 K14）。
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run tests
+        run: pnpm run test
+      - name: Run typecheck
+        run: pnpm run typecheck
+      - name: Check public type surface
+        run: pnpm run test:types
+      - name: Build package
+        run: pnpm run build
