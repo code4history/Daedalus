@@ -110,7 +110,7 @@ Z(s)   = (s <= epsSSE)
 
 - LOO（leave-one-out）validation（未指定 holdout は `validationSkipped`）
 - 一般形 `criticalF`（df1≠2 の不完全ベータ）
-- weight / robust fitting / 逆写像 RMS / アンチメリディアン・極域
+- weight / robust fitting / 逆写像 RMS の高度化 / アンチメリディアン・極域
 - CI での継続的・自動のブラウザ実行（上の「Runtime」を参照）
 
 ## ライセンス

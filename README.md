@@ -115,7 +115,7 @@ The following are not supported. They are candidates for a future release and ar
 
 - LOO (leave-one-out) validation (an unspecified holdout gives `validationSkipped`)
 - The general form of `criticalF` (the incomplete beta function for df1≠2)
-- Weights / robust fitting / inverse-mapping RMS / antimeridian and polar regions
+- Weights / robust fitting / more advanced inverse-mapping RMS / antimeridian and polar regions
 - Continuous, automated browser execution on CI (see "Runtime" above)
 
 ## License
