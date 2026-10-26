@@ -6,7 +6,7 @@
 
 - Input: GCPs plus a single CRS
 - Output: `world_file_basic` and post-shear refinement
-- Runtime: Node.js とブラウザ。ブラウザでの対応は 3 段に分けて書きます。**(1) バンドルできること = 検証済み**: Teiresias の `pnpm run verify:demo-bundle`（`scripts/verify-demo-browser-bundle.mjs`）がデモのビルドの出力チャンクを走査し、Node 固有の指定子が残っていないことと Daedalus 由来のコードが実在することを機械で検証します（CI から継続的に走ります）。**(2) 実ブラウザでの実行 = 手動で 1 回確認済み**: 2026-08-29 に Teiresias のデモを実ブラウザで動かして確かめました。1 回の手動確認は自動テストではないため、回帰は防げません。**(3) CI での継続的・自動のブラウザ実行 = 未対応**（予定。[Issue の一覧](https://github.com/code4history/Daedalus/issues)を参照）。
+- Runtime: Node.js とブラウザ。ブラウザでの対応は 3 段に分けて書きます。**(1) バンドルできること = 検証済み**: Teiresias の `pnpm run verify:demo-bundle`（`scripts/verify-demo-browser-bundle.mjs`）がデモのビルドの出力チャンクを走査し、Node 固有の指定子が残っていないことと Daedalus 由来のコードが実在することを機械で検証します（CI から継続的に走ります）。**(2) 実ブラウザでの実行 = 手動で 1 回確認済み**: 2026-08-29 に Teiresias のデモを実ブラウザで動かして確かめました。1 回の手動確認は自動テストではないため、回帰は防げません。**(3) CI での継続的・自動のブラウザ実行 = 未対応**（予定。[#4](https://github.com/code4history/Daedalus/issues/4) を参照）。
 - Scope: fitting only, not CRS candidate lookup
 
 English README is [here](./README.md).
@@ -106,7 +106,7 @@ Z(s)   = (s <= epsSSE)
 
 ### 非目標
 
-次のものには対応していません。将来の版の候補として [Issue の一覧](https://github.com/code4history/Daedalus/issues)で扱います。
+次のものには対応していません。将来の版の候補として [#3](https://github.com/code4history/Daedalus/issues/3)（検証・重み・ロバスト推定・広域など）と [#4](https://github.com/code4history/Daedalus/issues/4)（CI でのブラウザ実行）で扱います。
 
 - LOO（leave-one-out）validation（未指定 holdout は `validationSkipped`）
 - 一般形 `criticalF`（df1≠2 の不完全ベータ）

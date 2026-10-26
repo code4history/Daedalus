@@ -6,7 +6,7 @@
 
 - Input: GCPs plus a single CRS
 - Output: `world_file_basic` and post-shear refinement
-- Runtime: Node.js and browser. Browser support is described in three levels. **(1) Bundlability = verified**: Teiresias' `pnpm run verify:demo-bundle` (`scripts/verify-demo-browser-bundle.mjs`) scans the output chunks of the demo build and mechanically verifies that no Node-specific specifier remains and that Daedalus-derived code is actually present (it runs continuously from CI). **(2) Execution in a real browser = checked manually once**: the Teiresias demo was run in a real browser on 2026-08-29. A single manual check is not an automated test, so it does not guard against regressions. **(3) Continuous, automated browser execution on CI = not available yet** (planned; see the [issue tracker](https://github.com/code4history/Daedalus/issues)).
+- Runtime: Node.js and browser. Browser support is described in three levels. **(1) Bundlability = verified**: Teiresias' `pnpm run verify:demo-bundle` (`scripts/verify-demo-browser-bundle.mjs`) scans the output chunks of the demo build and mechanically verifies that no Node-specific specifier remains and that Daedalus-derived code is actually present (it runs continuously from CI). **(2) Execution in a real browser = checked manually once**: the Teiresias demo was run in a real browser on 2026-08-29. A single manual check is not an automated test, so it does not guard against regressions. **(3) Continuous, automated browser execution on CI = not available yet** (planned; see [#4](https://github.com/code4history/Daedalus/issues/4)).
 - Scope: fitting only, not CRS candidate lookup
 
 日本語のREADMEは[こちら](./README.ja.md)。
@@ -111,7 +111,8 @@ against real data; they are initial heuristics for suppressing overfitting.
 ### Non-goals
 
 The following are not supported. They are candidates for a future release and are tracked in the
-[issue tracker](https://github.com/code4history/Daedalus/issues).
+issues [#3](https://github.com/code4history/Daedalus/issues/3) (validation, weights, robust fitting, wide areas and more) and
+[#4](https://github.com/code4history/Daedalus/issues/4) (browser execution on CI).
 
 - LOO (leave-one-out) validation (an unspecified holdout gives `validationSkipped`)
 - The general form of `criticalF` (the incomplete beta function for df1≠2)
