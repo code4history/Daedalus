@@ -6,7 +6,7 @@
 
 - Input: GCPs plus a single CRS
 - Output: `world_file_basic` and post-shear refinement
-- Runtime: Node.js と browser。browser は**行ごとに実績が違う**ため 3 段に分けて書く（m3-t1）。**(1) バンドル可能性 = 検証済**: Teiresias の `pnpm run verify:demo-bundle`（`scripts/verify-demo-browser-bundle.mjs`）が demo build の出力チャンクを走査し、Node 固有指定子が残っていないことと Daedalus 由来コードが実在することを機械検証する（CI から継続的に走る）。**(2) 実ブラウザでの実行 = 観測済（「検証済」ではない）**: 2026-08-29 に Teiresias デモを実ブラウザで **1 回観測**した（m3-t1/AC-16）。1 回の観測は自動検査ではない ∴ 回帰を守らない。**(3) CI 上での継続的・自動のブラウザ実行と canvas ドラッグの自動操作 = 未検証**（Cycle 1 の既知欠落）。`Daedalus/src` は本件のために 1 バイトも変更していない（m0 凍結を解いていない）
+- Runtime: Node.js とブラウザ。ブラウザでの対応は 3 段に分けて書きます。**(1) バンドルできること = 検証済み**: Teiresias の `pnpm run verify:demo-bundle`（`scripts/verify-demo-browser-bundle.mjs`）がデモのビルドの出力チャンクを走査し、Node 固有の指定子が残っていないことと Daedalus 由来のコードが実在することを機械で検証します（CI から継続的に走ります）。**(2) 実ブラウザでの実行 = 手動で 1 回確認済み**: 2026-08-29 に Teiresias のデモを実ブラウザで動かして確かめました。1 回の手動確認は自動テストではないため、回帰は防げません。**(3) CI での継続的・自動のブラウザ実行 = 未対応**（予定。[#4](https://github.com/code4history/Daedalus/issues/4) を参照）。
 - Scope: fitting only, not CRS candidate lookup
 
 English README is [here](./README.md).
@@ -81,7 +81,7 @@ affine の残差自由度は `df2 = 2n-6` である。採用は次の**両方**�
 
 `holdout` を指定した場合はさらに `holdoutRmsAffine <= holdoutRmsSimilarity` を要求する。
 
-**SSE の数値的ゼロ**は厳密比較ではなく許容つきで判定する（仕様正本の「数値許容内の厳密適合」）。
+**SSE の数値的ゼロ**は厳密比較ではなく許容つきで判定する（「数値許容内の厳密適合」）。
 
 ```
 epsSSE = 1024 · Number.EPSILON² · Σ(X² + Y²)      （和は training GCP の geo 座標）
@@ -92,7 +92,7 @@ Z(s)   = (s <= epsSSE)
 - `Z(SSE6)` かつ `¬Z(SSE4)`: `F = +Infinity` として F gate を通す
 
 `alpha = 0.05` / `minRelativeImprovement = 0.01` / 安全係数 `1024` は実データで較正した値ではなく、
-Cycle 1 の過適合抑制のための初期ヒューリスティック（仮仕様）である。
+過適合抑制のための初期ヒューリスティックである。
 
 ### `debug`（`options.debug` が真のときのみ）
 
@@ -104,21 +104,14 @@ Cycle 1 の過適合抑制のための初期ヒューリスティック（仮仕
 | `fStatistic` / `criticalF` / `relativeImprovement` | F gate を評価したとき |
 | `holdoutRmsSimilarity` / `holdoutRmsAffine` | `holdout` を指定して検証に到達したとき |
 
-### 非目標（Cycle 1）
+### 非目標
+
+次のものには対応していません。将来の版の候補として [#3](https://github.com/code4history/Daedalus/issues/3)（検証・重み・ロバスト推定・広域など）と [#4](https://github.com/code4history/Daedalus/issues/4)（CI でのブラウザ実行）で扱います。
 
 - LOO（leave-one-out）validation（未指定 holdout は `validationSkipped`）
 - 一般形 `criticalF`（df1≠2 の不完全ベータ）
 - weight / robust fitting / 逆写像 RMS の高度化 / アンチメリディアン・極域
-
-## 関連文書
-
-- [CRS 推定ライブラリ群 仮仕様正本](../docs/superpowers/specs/2026-08-27-c1-crs-libs-provisional-spec.md) —
-  本 package の観測契約・数値挙動が集約されている（**仮仕様**であり人間承認済みの確定仕様ではない）。
-- [mock transformer 契約文書](../docs/superpowers/specs/2026-08-28-mock-transformer-contract.md) —
-  `src/testkit/` が提供する mock adapter の契約。
-
-上記リンクは**親リポジトリ（monorepo）を checkout したときにのみ解決する**。
-本 repository を単体で clone した場合、`../docs/` は存在しない。
+- CI での継続的・自動のブラウザ実行（上の「Runtime」を参照）
 
 ## ライセンス
 

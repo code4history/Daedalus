@@ -6,7 +6,7 @@
 
 - Input: GCPs plus a single CRS
 - Output: `world_file_basic` and post-shear refinement
-- Runtime: Node.js and browser. The browser story differs line by line, so it is written in three tiers (m3-t1). **(1) Bundlability = verified**: Teiresias' `pnpm run verify:demo-bundle` (`scripts/verify-demo-browser-bundle.mjs`) scans the output chunks of the demo build and mechanically verifies that no Node-specific specifier remains and that Daedalus-derived code is actually present (it runs continuously from CI). **(2) Execution in a real browser = observed (not "verified")**: the Teiresias demo was observed **once** in a real browser on 2026-08-29 (m3-t1/AC-16). A single observation is not an automated check, so it does not guard against regressions. **(3) Continuous, automated browser execution on CI and automated canvas drag operation = unverified** (a known gap of Cycle 1). `Daedalus/src` has not been changed by a single byte for this work (the m0 freeze has not been lifted).
+- Runtime: Node.js and browser. Browser support is described in three levels. **(1) Bundlability = verified**: Teiresias' `pnpm run verify:demo-bundle` (`scripts/verify-demo-browser-bundle.mjs`) scans the output chunks of the demo build and mechanically verifies that no Node-specific specifier remains and that Daedalus-derived code is actually present (it runs continuously from CI). **(2) Execution in a real browser = checked manually once**: the Teiresias demo was run in a real browser on 2026-08-29. A single manual check is not an automated test, so it does not guard against regressions. **(3) Continuous, automated browser execution on CI = not available yet** (planned; see [#4](https://github.com/code4history/Daedalus/issues/4)).
 - Scope: fitting only, not CRS candidate lookup
 
 日本語のREADMEは[こちら](./README.ja.md)。
@@ -84,7 +84,7 @@ the following hold.
 When `holdout` is specified, `holdoutRmsAffine <= holdoutRmsSimilarity` is required in addition.
 
 **Numerical zero of the SSE** is judged with a tolerance rather than by strict comparison
-(the "exact fit within numerical tolerance" of the provisional specification).
+("exact fit within numerical tolerance").
 
 ```
 epsSSE = 1024 · Number.EPSILON² · Σ(X² + Y²)      (the sum is over the geo coordinates of the training GCPs)
@@ -96,8 +96,7 @@ Z(s)   = (s <= epsSSE)
 - `Z(SSE6)` and `¬Z(SSE4)`: the F gate is passed by treating `F = +Infinity`
 
 `alpha = 0.05`, `minRelativeImprovement = 0.01` and the safety factor `1024` are not values calibrated
-against real data; they are initial heuristics (a provisional specification) for suppressing overfitting
-in Cycle 1.
+against real data; they are initial heuristics for suppressing overfitting.
 
 ### `debug` (only when `options.debug` is truthy)
 
@@ -109,22 +108,16 @@ in Cycle 1.
 | `fStatistic` / `criticalF` / `relativeImprovement` | when the F gate was evaluated |
 | `holdoutRmsSimilarity` / `holdoutRmsAffine` | when `holdout` was specified and validation was reached |
 
-### Non-goals (Cycle 1)
+### Non-goals
+
+The following are not supported. They are candidates for a future release and are tracked in the
+issues [#3](https://github.com/code4history/Daedalus/issues/3) (validation, weights, robust fitting, wide areas and more) and
+[#4](https://github.com/code4history/Daedalus/issues/4) (browser execution on CI).
 
 - LOO (leave-one-out) validation (an unspecified holdout gives `validationSkipped`)
 - The general form of `criticalF` (the incomplete beta function for df1≠2)
 - Weights / robust fitting / more advanced inverse-mapping RMS / antimeridian and polar regions
-
-## Related documents
-
-- [Provisional specification of the CRS estimation libraries](../docs/superpowers/specs/2026-08-27-c1-crs-libs-provisional-spec.md) —
-  the observation contract and the numerical behaviour of this package are collected there
-  (it is a **provisional specification**, not a finalized specification approved by a human).
-- [Mock transformer contract](../docs/superpowers/specs/2026-08-28-mock-transformer-contract.md) —
-  the contract of the mock adapter provided by `src/testkit/`.
-
-The links above **resolve only when the parent repository (the monorepo) is checked out**.
-When this repository is cloned on its own, `../docs/` does not exist.
+- Continuous, automated browser execution on CI (see "Runtime" above)
 
 ## License
 

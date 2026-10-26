@@ -12,7 +12,7 @@
       "default": "./dist/index.js"
     }
   },
-  "description": "World-file fitting helpers for Maplat V3.1.",
+  "description": "World-file fitting helpers for Maplat.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/code4history/Daedalus.git"
