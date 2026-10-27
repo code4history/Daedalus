@@ -30,6 +30,10 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+      # pnpm 11 reads allowBuilds only from pnpm-workspace.yaml, which is kept out of the
+      # repository root for local development (see the comment in ci/pnpm-workspace.ci.yaml).
+      - name: Use CI pnpm settings
+        run: cp ci/pnpm-workspace.ci.yaml pnpm-workspace.yaml
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       # The demo imports src directly, so no package build is needed first.
