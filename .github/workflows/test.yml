@@ -5,9 +5,10 @@ on:
   push:
   pull_request:
 
-# Daedalus は依存を 1 件も持たない（dependencies キー自体が無い）∴ 単体 checkout で完結する。
-# 兄弟 checkout（m3-t1 設計 §6.4）は不要である。デモを持たないため deploy.yml も置かない
-# （HR-m3-007 の「Pages にデプロイする設定〔あれば〕」の条件を満たさない。設計 K14）。
+# Daedalus は依存を 1 件も持たない（dependencies キー自体が無い）∴ 単体 checkout で完結し、
+# 兄弟リポジトリの checkout は不要である。デモ（index.html と demo/）は vite で作り、
+# GitHub Pages への配備は deploy.yml が master への push で行う。ここではデモの build と
+# Pages 用の成果物の形だけを検査する（verify:demo）。
 jobs:
   test:
     name: Test
@@ -33,3 +34,30 @@ jobs:
         run: pnpm run test:types
       - name: Build package
         run: pnpm run build
+      - name: Build and verify demo site
+        run: pnpm run verify:demo
+
+  # deploy.yml runs only on pushes to master, so its install path would otherwise be
+  # tried for the first time after merging. This job repeats the same steps (pnpm
+  # 11.27.0, Node.js 24, the CI pnpm settings and --frozen-lockfile) on every push
+  # and pull request, so a failing install shows up before the merge.
+  deploy-build:
+    name: Deploy build (same install as deploy.yml)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 11.27.0
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Use CI pnpm settings
+        run: cp ci/pnpm-workspace.ci.yaml pnpm-workspace.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build and verify demo site
+        run: pnpm run verify:demo

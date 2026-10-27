@@ -11,6 +11,16 @@
 
 English README is [here](./README.md).
 
+## デモ
+
+デモは GitHub Pages で公開しています: <https://code4history.dev/Daedalus/>（当てはめのページは [`demo/worldfile-fit.html`](https://code4history.dev/Daedalus/demo/worldfile-fit.html)）。`pnpm run dev` で同じページが手元で開きます。プリセットのボタンで、明確に違う結果になる GCP の組を切り替えられます。
+
+- **モデル**: 回転と縮尺だけの地図は相似で当たり、同じ点に横方向の shear を加えると affine に切り替わります（F は臨界値を大きく超えます）。
+- **点の数**: GCP 2 点は `preview`（仮の答え）、3 点は `adoptable` でも affine を評価せず、5 点で affine を評価して F の棒が出ます。
+- **点の並び**: 一直線に近い組だけが `nearCollinearSource` を出し、affine を評価しません。
+- **誤った点**: 1 点を約 75 m ずらしても品質の札は `adoptable` のままで、その点の長い残差の矢印と RMS でだけ見えます。品質の札は点の数で決まる判定で、誤差の大きさは見ません（デモでも札の横にそう書いています）。
+- **点のドラッグ**: 点を手で動かすと、プリセットのボタンの押下が外れ、見え方の 1 行は「プリセットではない入力」の説明に替わります。
+
 ## 公開 API
 
 ```ts

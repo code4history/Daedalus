@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daedalus Demos</title>
+  <link rel="stylesheet" href="./demo/demo-shell.css">
+</head>
+<body class="c4h-portal">
+  <header class="c4h-portal-header">
+    <h1>@c4h/daedalus - デモ一覧</h1>
+    <p>GCP（地図画像の pixel と CRS の平面座標の組）から world file を当てはめるライブラリのデモ</p>
+  </header>
+
+  <main class="c4h-portal-main">
+    <div class="c4h-demo-grid">
+      <a class="c4h-demo-card" href="./demo/worldfile-fit.html">
+        <div class="c4h-card-header">
+          <div class="c4h-badge">Demo - World-file Fitting</div>
+          <h2>World-file fitting（world file の当てはめ）</h2>
+        </div>
+        <div class="c4h-card-body">
+          プリセットのボタンで GCP の組を切り替え、採用されるモデル（相似か affine か）・
+          world file の 6 値・残差の矢印・F 検定・warning がどう分かれるかを見られます。
+          pixel の点はドラッグでき、離すと計算し直します。
+        </div>
+        <div class="c4h-card-footer">-&gt; demo/worldfile-fit.html</div>
+      </a>
+    </div>
+  </main>
+
+  <footer class="c4h-portal-footer">@c4h/daedalus - Daedalus Demo Portal</footer>
+</body>
+</html>
