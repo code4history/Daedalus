@@ -18,7 +18,8 @@ The demo is published on GitHub Pages: <https://code4history.dev/Daedalus/> (the
 - **Model**: a map with rotation and scale only is fitted as a similarity; the same points with a horizontal shear switch to affine, with F far above its critical value.
 - **Point count**: 2 GCPs give only a `preview` answer; 3 GCPs are `adoptable` but affine is not evaluated; with 5 GCPs affine is evaluated and the F bars appear.
 - **Layout**: only the nearly collinear set warns `nearCollinearSource` and skips affine.
-- **A wrong point**: moving one GCP by about 75 m keeps the quality gate at `adoptable`; only its long residual arrow and the RMS reveal it.
+- **A wrong point**: moving one GCP by about 75 m keeps the quality gate at `adoptable`; only its long residual arrow and the RMS reveal it. The quality gate is decided by the number of points and does not look at the size of the errors, so the demo says so next to it.
+- **Dragging a point**: once you move a point by hand, the preset button is released and the expectation line says the input is no longer a preset.
 
 ## Public API
 

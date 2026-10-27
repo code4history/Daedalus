@@ -104,5 +104,9 @@ describe('demo presets: outputs split as each contrast promises', () => {
     const preset = findPreset('outlier', 'oneWrong')!;
     const r = residuals(wrong.worldFile!, preset.gcps as readonly GcpPair[]);
     expect(r.indexOf(Math.max(...r))).toBe(2);
+    // The expectation line and both READMEs say the quality gate stays `adoptable` for the
+    // wrong point: the gate is decided by the number of points, not by the size of errors.
+    expect(wrong.qualityGate).toBe('adoptable');
+    expect(wrong.qualityGate).toBe(correct.qualityGate);
   });
 });

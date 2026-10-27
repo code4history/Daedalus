@@ -53,8 +53,11 @@ export const WARNING_TEXT = Object.freeze({
   unsupportedAxisOrder: 'この軸の順序は扱えない',
 });
 
+const MANUAL_EXPECTATION =
+  '点を手で動かした入力（プリセットではない）。動かした点の影響は残差の矢印と RMS で見る。プリセットのボタンで元に戻せる。';
+
 const QUALITY_TEXT = {
-  adoptable: '採用できる',
+  adoptable: '採用できる（点の数で決まる判定で、誤差の大きさは見ない。誤差は RMS と残差の矢印で見る）',
   preview: '仮の答え',
   unusable: '使えない',
 };
@@ -261,6 +264,7 @@ export function initDemo(config = {}) {
     result: null,
     recalcCount: 0,
     dragIndex: -1,
+    dragStartPixel: null,
   };
 
   const setText = (node, text) => {
@@ -298,18 +302,30 @@ export function initDemo(config = {}) {
     }
   }
 
-  function applyPreset(contrast, option) {
-    const id = `${contrast.key}:${option.key}`;
-    state.activePreset = id;
-    state.gcps = copyGcps(option.gcps);
-    state.pixelMapper = makeMapper(state.gcps.map((pair) => pair.pixel));
+  function markPressed(id) {
     for (const button of presetButtons) {
       const pressed = button.dataset.preset === id;
       button.setAttribute('aria-pressed', String(pressed));
       button.classList.toggle('active', pressed);
     }
+  }
+
+  function applyPreset(contrast, option) {
+    const id = `${contrast.key}:${option.key}`;
+    state.activePreset = id;
+    state.gcps = copyGcps(option.gcps);
+    state.pixelMapper = makeMapper(state.gcps.map((pair) => pair.pixel));
+    markPressed(id);
     setText(el.expectation, option.expectation);
     recalculate();
+  }
+
+  // Once a point is moved by hand the input is no longer the preset, so its pressed
+  // button and its expectation line would describe something else.
+  function leavePreset() {
+    state.activePreset = null;
+    markPressed(null);
+    setText(el.expectation, MANUAL_EXPECTATION);
   }
 
   // ---- outputs -------------------------------------------------------------
@@ -500,6 +516,7 @@ export function initDemo(config = {}) {
     });
     if (best < 0) return;
     state.dragIndex = best;
+    state.dragStartPixel = [...state.gcps[best].pixel];
     el.pixelCanvas.setPointerCapture?.(event.pointerId);
     drawPixelBoard();
   }
@@ -514,7 +531,11 @@ export function initDemo(config = {}) {
   function onPointerUp(event) {
     if (state.dragIndex < 0) return;
     onPointerMove(event);
+    const moved = state.gcps[state.dragIndex].pixel;
+    const start = state.dragStartPixel;
     state.dragIndex = -1;
+    state.dragStartPixel = null;
+    if (!start || moved[0] !== start[0] || moved[1] !== start[1]) leavePreset();
     recalculate();
   }
 

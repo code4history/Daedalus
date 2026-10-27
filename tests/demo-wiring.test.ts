@@ -154,6 +154,43 @@ describe('demo wiring', () => {
     expect(after[1]).toBeLessThan(before[1]); // v axis points up on the board
   });
 
+  it('dragging a point clears the pressed preset and replaces its expectation line', async () => {
+    const demo = initDemo({ document, fit: vi.fn(() => fakeResult()) });
+    await demo.whenSettled();
+    const presetLine = text('preset-expectation');
+    expect(demo.getState().activePreset).not.toBeNull();
+    expect(document.querySelectorAll('#preset-bar button[aria-pressed="true"]')).toHaveLength(1);
+    const [bx, by] = demo.getState().pixelMarkers[0];
+    const canvas = document.getElementById('pixel-canvas')!;
+    canvas.dispatchEvent(new MouseEvent('pointerdown', { clientX: bx, clientY: by, bubbles: true }));
+    canvas.dispatchEvent(new MouseEvent('pointerup', { clientX: bx + 20, clientY: by + 10, bubbles: true }));
+    expect(demo.getState().activePreset).toBeNull();
+    expect(document.querySelectorAll('#preset-bar button[aria-pressed="true"]')).toHaveLength(0);
+    expect(document.querySelectorAll('#preset-bar button.active')).toHaveLength(0);
+    expect(text('preset-expectation')).not.toBe(presetLine);
+    expect(text('preset-expectation')).toContain('手で動かした');
+  });
+
+  it('a click on a point without moving it keeps the pressed preset', async () => {
+    const demo = initDemo({ document, fit: vi.fn(() => fakeResult()) });
+    await demo.whenSettled();
+    const presetId = demo.getState().activePreset;
+    const presetLine = text('preset-expectation');
+    const [bx, by] = demo.getState().pixelMarkers[0];
+    const canvas = document.getElementById('pixel-canvas')!;
+    canvas.dispatchEvent(new MouseEvent('pointerdown', { clientX: bx, clientY: by, bubbles: true }));
+    canvas.dispatchEvent(new MouseEvent('pointerup', { clientX: bx, clientY: by, bubbles: true }));
+    expect(demo.getState().activePreset).toBe(presetId);
+    expect(text('preset-expectation')).toBe(presetLine);
+  });
+
+  it('explains next to the quality gate that adoptable does not look at the size of errors', async () => {
+    const demo = initDemo({ document, fit: vi.fn(() => fakeResult({ qualityGate: 'adoptable', rmsMeters: 30 })) });
+    await demo.whenSettled();
+    expect(text('quality-text')).toContain('点の数で決まる');
+    expect(text('quality-text')).toContain('誤差の大きさは見ない');
+  });
+
   it('shows the package version in the footer', async () => {
     const demo = initDemo({ document, fit: vi.fn(() => fakeResult()) });
     await demo.whenSettled();
