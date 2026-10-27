@@ -11,6 +11,15 @@
 
 日本語のREADMEは[こちら](./README.ja.md)。
 
+## Demo
+
+The demo is published on GitHub Pages: <https://code4history.dev/Daedalus/> (the fitting page is [`demo/worldfile-fit.html`](https://code4history.dev/Daedalus/demo/worldfile-fit.html)). `pnpm run dev` opens the same pages locally. Preset buttons load GCP sets that produce clearly different results:
+
+- **Model**: a map with rotation and scale only is fitted as a similarity; the same points with a horizontal shear switch to affine, with F far above its critical value.
+- **Point count**: 2 GCPs give only a `preview` answer; 3 GCPs are `adoptable` but affine is not evaluated; with 5 GCPs affine is evaluated and the F bars appear.
+- **Layout**: only the nearly collinear set warns `nearCollinearSource` and skips affine.
+- **A wrong point**: moving one GCP by about 75 m keeps the quality gate at `adoptable`; only its long residual arrow and the RMS reveal it.
+
 ## Public API
 
 ```ts
