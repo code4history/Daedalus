@@ -21,6 +21,16 @@ The demo is published on GitHub Pages: <https://code4history.dev/Daedalus/> (the
 - **A wrong point**: moving one GCP by about 75 m keeps the quality gate at `adoptable`; only its long residual arrow and the RMS reveal it. The quality gate is decided by the number of points and does not look at the size of the errors, so the demo says so next to it.
 - **Dragging a point**: once you move a point by hand, the preset button is released and the expectation line says the input is no longer a preset.
 
+## Installation
+
+Requires Node.js >= 22 (or a browser through a bundler).
+
+<!-- release-pinned:start -->
+```sh
+pnpm add @c4h/daedalus
+```
+<!-- release-pinned:end -->
+
 ## Public API
 
 ```ts
@@ -30,6 +40,21 @@ const result = fitWorldFile(gcps, options);
 
 Only `fitWorldFile` and the types are public. The affine / F-test helpers are package-internal and
 are not exported from `src/index.ts`.
+
+### Types
+
+| Name | What it describes |
+|---|---|
+| `GcpPair` | One ground control point: `pixel` `[u, v]` and `geo` `[X, Y]`. |
+| `GeoBasis` | How `geo` is expressed: `{ kind: 'lonlat_deg', axisOrder: 'lon-lat' }` or `{ kind: 'planar_xy', axisOrder: 'xy', unit: 'm' \| 'ft' }`. |
+| `FitOptions` | Options of `fitWorldFile` (below). |
+| `FitResult` | The return value (see the observation contract below). |
+| `WorldFile` | The six world-file parameters `xScale`, `xSkew`, `xOrigin`, `ySkew`, `yScale`, `yOrigin`. |
+| `QualityGate` | `'adoptable' \| 'preview' \| 'unusable'`. |
+| `FitStatus` | `'ok' \| 'ok_with_warnings' \| 'insufficient' \| 'failed'`. |
+| `FitWarning` | `{ code: WarningCode; detail?: string }`. |
+| `WarningCode` | The warning codes listed in "Warning codes and evaluation order". |
+| `MaybePromise` | `MaybePromise<T> = T \| Promise<T>`, a helper type. |
 
 ### `FitOptions`
 
@@ -128,6 +153,21 @@ issues [#3](https://github.com/code4history/Daedalus/issues/3) (validation, weig
 - The general form of `criticalF` (the incomplete beta function for df1≠2)
 - Weights / robust fitting / more advanced inverse-mapping RMS / antimeridian and polar regions
 - Continuous, automated browser execution on CI (see "Runtime" above)
+
+## Development
+
+- `pnpm run dev`: open the demo locally
+- `pnpm run test` / `pnpm run typecheck` / `pnpm run test:types`: tests, type check and the public type surface
+- `pnpm run build`: build the package into `dist/`
+- `pnpm run verify:demo`: build the GitHub Pages demo into `dist-demo/` and check it
+
+For an install of this repository on its own (outside a larger pnpm workspace), copy the CI
+settings first: `cp ci/pnpm-workspace.ci.yaml pnpm-workspace.yaml && pnpm install --frozen-lockfile`.
+Do not commit the copied `pnpm-workspace.yaml`.
+
+`pnpm publish` is guarded by `prepublishOnly` (test, typecheck, test:types, build and
+verify:demo). Releases are published from GitHub Actions (`.github/workflows/publish.yml`).
+Changes are listed in [CHANGELOG.md](./CHANGELOG.md).
 
 ## License
 
