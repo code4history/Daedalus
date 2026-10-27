@@ -21,6 +21,16 @@ English README is [here](./README.md).
 - **誤った点**: 1 点を約 75 m ずらしても品質の札は `adoptable` のままで、その点の長い残差の矢印と RMS でだけ見えます。品質の札は点の数で決まる判定で、誤差の大きさは見ません（デモでも札の横にそう書いています）。
 - **点のドラッグ**: 点を手で動かすと、プリセットのボタンの押下が外れ、見え方の 1 行は「プリセットではない入力」の説明に替わります。
 
+## インストール
+
+Node.js >= 22（またはバンドラ経由のブラウザ）が必要です。
+
+<!-- release-pinned:start -->
+```sh
+pnpm add @c4h/daedalus
+```
+<!-- release-pinned:end -->
+
 ## 公開 API
 
 ```ts
@@ -30,6 +40,21 @@ const result = fitWorldFile(gcps, options);
 
 `fitWorldFile` と型のみが公開である。affine / F 検定の helper は package-internal であり
 `src/index.ts` からは export しない。
+
+### 型
+
+| 名前 | 表すもの |
+|---|---|
+| `GcpPair` | 対応点 1 組。`pixel` `[u, v]` と `geo` `[X, Y]`。 |
+| `GeoBasis` | `geo` の表し方。`{ kind: 'lonlat_deg', axisOrder: 'lon-lat' }` か `{ kind: 'planar_xy', axisOrder: 'xy', unit: 'm' \| 'ft' }`。 |
+| `FitOptions` | `fitWorldFile` の option（下の表）。 |
+| `FitResult` | 戻り値（下の観測契約を参照）。 |
+| `WorldFile` | ワールドファイルの 6 つのパラメータ `xScale`・`xSkew`・`xOrigin`・`ySkew`・`yScale`・`yOrigin`。 |
+| `QualityGate` | `'adoptable' \| 'preview' \| 'unusable'`。 |
+| `FitStatus` | `'ok' \| 'ok_with_warnings' \| 'insufficient' \| 'failed'`。 |
+| `FitWarning` | `{ code: WarningCode; detail?: string }`。 |
+| `WarningCode` | 「warning コードと判定順序」に挙げた warning コード。 |
+| `MaybePromise` | `MaybePromise<T> = T \| Promise<T>`（補助の型）。 |
 
 ### `FitOptions`
 
@@ -122,6 +147,21 @@ Z(s)   = (s <= epsSSE)
 - 一般形 `criticalF`（df1≠2 の不完全ベータ）
 - weight / robust fitting / 逆写像 RMS の高度化 / アンチメリディアン・極域
 - CI での継続的・自動のブラウザ実行（上の「Runtime」を参照）
+
+## 開発
+
+- `pnpm run dev`: デモをローカルで開く
+- `pnpm run test` / `pnpm run typecheck` / `pnpm run test:types`: テスト・型検査・公開型の検査
+- `pnpm run build`: パッケージを `dist/` に build
+- `pnpm run verify:demo`: GitHub Pages 用のデモを `dist-demo/` に build して確かめる
+
+このリポジトリだけを単独で install するとき（より大きな pnpm workspace の外）は、先に CI の設定を
+写してください: `cp ci/pnpm-workspace.ci.yaml pnpm-workspace.yaml && pnpm install --frozen-lockfile`。
+写した `pnpm-workspace.yaml` は commit しないでください。
+
+`pnpm publish` の前に `prepublishOnly`（test・typecheck・test:types・build・verify:demo）が走ります。
+公開は GitHub Actions（`.github/workflows/publish.yml`）から行います。変更の記録は
+[CHANGELOG.md](./CHANGELOG.md) にあります。
 
 ## ライセンス
 
