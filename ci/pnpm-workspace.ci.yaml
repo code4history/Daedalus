@@ -22,9 +22,3 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - "@maplat/*"
   - "@c4h/*"
-
-overrides:
-  # vitest 3.2 > tinypool. <2.1.2 is critical (prototype pollution leading to code
-  # execution in worker options). vitest 3.2 declares ^1.1.1 and no 1.x release is
-  # patched, so this crosses to the 2 series; the test run uses it as is.
-  tinypool: "^2.1.2"
