@@ -39,11 +39,11 @@ export type FitWarning = {
 export interface FitOptions {
   geoBasis?: GeoBasis;
   debug?: boolean;
-  collinearityThreshold?: number; // for affine (used in t2)
-  alpha?: number;                  // for F gate (used in t2)
-  minRelativeImprovement?: number; // for F gate (used in t2)
+  collinearityThreshold?: number; // for affine
+  alpha?: number;                  // for F gate
+  minRelativeImprovement?: number; // for F gate
   normalizeEpsilonMeters?: number;
-  holdout?: readonly GcpPair[];    // for holdout validation (used in t2)
+  holdout?: readonly GcpPair[];    // for holdout validation
 }
 
 export interface FitResult {
@@ -56,7 +56,7 @@ export interface FitResult {
   warnings: readonly FitWarning[];
   /**
    * `FitOptions.debug` が真のときだけ存在する診断値。
-   * optional field は該当する分岐が実行されたときのみ存在する（m0-t2 設計 v1.2 §3.8）。
+   * optional field は該当する分岐が実行されたときのみ存在する。
    * `sse` / `mse` は**選択モデル**（affine 採用なら affine、不採用なら similarity）のもの。
    */
   debug?: {

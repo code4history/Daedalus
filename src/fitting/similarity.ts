@@ -3,11 +3,11 @@ import { criticalF, fStatistic, fitAffine, forwardSse, relativeImprovement } fro
 
 export { type FitOptions, type FitResult, type FitWarning, type WarningCode };
 
-/** 設計 v1.2 §3.4: F gate の有意水準（開区間 (0,1)） */
+/** F gate の有意水準（開区間 (0,1)） */
 const DEFAULT_ALPHA = 0.05;
-/** 設計 v1.2 §3.5: 相対改善 gate の下限（閉区間 [0,1]） */
+/** 相対改善 gate の下限（閉区間 [0,1]） */
 const DEFAULT_MIN_RELATIVE_IMPROVEMENT = 0.01;
-/** 設計 v1.2 §3.3: 共分散固有値比の共線判定閾値（閉区間 [0,1]） */
+/** 共分散固有値比の共線判定閾値（閉区間 [0,1]） */
 const DEFAULT_COLLINEARITY_THRESHOLD = 0.01;
 
 /** 閉区間 [0,1] を有効範囲とする option の正規化。範囲外・非有限は既定値へ落とし warning は足さない。 */
@@ -24,13 +24,13 @@ function normalizeOpenUnit(value: number | undefined, fallback: number): number 
   return value;
 }
 
-/** affine 診断値（`FitResult.debug` のうち sse / mse を除いた optional 部分。設計 §3.8） */
+/** affine 診断値（`FitResult.debug` のうち sse / mse を除いた optional 部分） */
 type AffineDebug = Omit<NonNullable<FitResult['debug']>, 'sse' | 'mse'>;
 
 /**
  * 選択モデルの逆写像による rmsPixels（affine 採用時）。
- * m0-t1 の Helmert 逆写像方式を一般の 2×2 affine へ拡張したもので、
- * similarity（xScale=yScale, xSkew=-ySkew）を代入すると m0-t1 の式に一致する。
+ * similarity（Helmert）の逆写像方式を一般の 2×2 affine へ拡張したもので、
+ * similarity（xScale=yScale, xSkew=-ySkew）を代入すると similarity の式に一致する。
  */
 function affineRmsPixels(wf: WorldFile, gcps: readonly GcpPair[]): number {
   const det = wf.xScale * wf.yScale - wf.xSkew * wf.ySkew;
@@ -49,7 +49,7 @@ function affineRmsPixels(wf: WorldFile, gcps: readonly GcpPair[]): number {
   return Math.sqrt(sumSqErrPixels / gcps.length);
 }
 
-/** holdout の 1 点あたり 2D 距離 RMS（設計 §3.6） */
+/** holdout の 1 点あたり 2D 距離 RMS */
 function holdoutRms(wf: WorldFile, holdout: readonly GcpPair[]): number {
   return Math.sqrt(forwardSse(wf, holdout) / holdout.length);
 }
@@ -72,7 +72,7 @@ export function fitWorldFile(
     };
   }
 
-  // 1b. 非空 holdout の非有限 pixel / geo は入力不正（設計 v1.2 §3.6 / §3.7 #0）。
+  // 1b. 非空 holdout の非有限 pixel / geo は入力不正（分岐 #0）。
   //     training fit より先に検査し、非有限値を RMS へ伝播させない。新規 WarningCode は作らない。
   const holdout: readonly GcpPair[] = opts?.holdout ?? [];
   for (let i = 0; i < holdout.length; i++) {
@@ -151,7 +151,7 @@ export function fitWorldFile(
   }
 
   let sumU = 0, sumV = 0, sumX = 0, sumY = 0;
-  // Σ(X²+Y²)（training geo のみ）。εSSE の材料（設計 v1.2 §3.4）。
+  // Σ(X²+Y²)（training geo のみ）。εSSE の材料。
   // 総和順序は「training GCP を index 昇順に走査し、各点で X²+Y² を加える」に固定する。
   // tests/affine.test.ts はこの順序で再計算し、厳密一致で照合する（MIN-R3-1 の選択機構）。
   let sumGeoSq = 0;
@@ -226,7 +226,7 @@ export function fitWorldFile(
   }
 
   // 4. Near Collinear detection (n >= 3)
-  // 固有値分解は similarity パスと affine パスで共用する（設計 §3.1。二重計算しない）
+  // 固有値分解は similarity パスと affine パスで共用する（二重計算しない）
   let nearCollinear = false;
   if (n >= 3) {
       const suu = Suu / n;
@@ -297,7 +297,7 @@ export function fitWorldFile(
   }
   const rmsPixels = scale2 > 0 ? Math.sqrt(sumSqErrPixels / n) : 0;
 
-  // 6. affine 判定（m0-t2。設計 v1.2 §3.7 の分岐順に上から評価する）
+  // 6. affine 判定（分岐 #1〜#8 を番号順に上から評価する）
   const alpha = normalizeOpenUnit(opts?.alpha, DEFAULT_ALPHA);
   const minRelativeImprovement = normalizeClosedUnit(
     opts?.minRelativeImprovement,
@@ -318,7 +318,7 @@ export function fitWorldFile(
     warnings.push({ code: 'affineSkippedCollinear' });
   } else {
     // #4〜#8: affine 評価に到達する
-    // εSSE = 1024 · Number.EPSILON² · Σ(X²+Y²)（設計 §3.4 の仮仕様）。
+    // εSSE = 1024 · Number.EPSILON² · Σ(X²+Y²)。
     // 以降の SSE の「ゼロ」判定はすべて Z(s) := (s <= sseZeroTolerance) を使い、厳密比較はしない。
     const sseZeroTolerance = 1024 * Number.EPSILON * Number.EPSILON * sumGeoSq;
     affineDebug.sseSimilarity = sse;
@@ -342,7 +342,7 @@ export function fitWorldFile(
         rejectDetail = `affine SSE is not smaller than similarity SSE (SSE6=${affine.sse} > SSE4=${sse})`;
       } else {
         const df2 = 2 * n - 6;
-        // Z(SSE6) かつ ¬Z(SSE4) なら F = +Infinity（設計 §3.4）
+        // Z(SSE6) かつ ¬Z(SSE4) なら F = +Infinity
         const fValue = affine.sse <= sseZeroTolerance
           ? Number.POSITIVE_INFINITY
           : fStatistic(sse, affine.sse, df2);
@@ -383,7 +383,7 @@ export function fitWorldFile(
       selectedRmsPixels = affineRmsPixels(affine!.worldFile, gcps);
     }
 
-    // ※ affine 評価に到達し holdout 未指定 / 空なら、採用可否にかかわらず必ず発出する（設計 §3.7 ※）
+    // ※ affine 評価に到達し holdout 未指定 / 空なら、採用可否にかかわらず必ず発出する
     if (holdout.length === 0) {
       warnings.push({ code: 'validationSkipped' });
     }
