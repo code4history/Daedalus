@@ -5,9 +5,10 @@ on:
   push:
   pull_request:
 
-# Daedalus は依存を 1 件も持たない（dependencies キー自体が無い）∴ 単体 checkout で完結する。
-# 兄弟 checkout（m3-t1 設計 §6.4）は不要である。デモを持たないため deploy.yml も置かない
-# （HR-m3-007 の「Pages にデプロイする設定〔あれば〕」の条件を満たさない。設計 K14）。
+# Daedalus は依存を 1 件も持たない（dependencies キー自体が無い）∴ 単体 checkout で完結し、
+# 兄弟リポジトリの checkout は不要である。デモ（index.html と demo/）は vite で作り、
+# GitHub Pages への配備は deploy.yml が master への push で行う。ここではデモの build と
+# Pages 用の成果物の形だけを検査する（verify:demo）。
 jobs:
   test:
     name: Test
@@ -33,3 +34,5 @@ jobs:
         run: pnpm run test:types
       - name: Build package
         run: pnpm run build
+      - name: Build and verify demo site
+        run: pnpm run verify:demo
