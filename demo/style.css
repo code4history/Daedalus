@@ -1,0 +1,211 @@
+/* Page-specific styles for the world-file fitting demo (the shared shell is demo-shell.css). */
+
+.daedalus-presets {
+  padding: 12px 16px 4px;
+  background: #ffffff;
+  border-bottom: 1px solid #e3e8ef;
+}
+
+.daedalus-preset-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.daedalus-preset-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.daedalus-preset-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5b6d;
+  margin-right: 2px;
+  min-width: 11em;
+}
+
+.daedalus-preset-btn {
+  padding: 5px 12px;
+  border: 1.5px solid #9fb3c8;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #1f2d3d;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.daedalus-preset-btn:hover {
+  background: #eef4fb;
+}
+
+.daedalus-preset-btn[aria-pressed="true"] {
+  background: #3a7bd5;
+  border-color: #3a7bd5;
+  color: #ffffff;
+}
+
+.daedalus-expectation {
+  margin: 10px 0 6px;
+  font-size: 13px;
+  color: #1f2d3d;
+}
+
+.daedalus-boards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 16px;
+}
+
+.daedalus-board {
+  display: block;
+  width: 420px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 420 / 320;
+  background: #f8fafc;
+  border: 1px solid #dfe6ee;
+}
+
+#pixel-canvas {
+  cursor: grab;
+  touch-action: none;
+}
+
+#pixel-canvas:active {
+  cursor: grabbing;
+}
+
+.daedalus-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+
+.daedalus-card {
+  padding: 12px 16px;
+}
+
+.daedalus-card h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.daedalus-card h3 {
+  margin: 14px 0 6px;
+  font-size: 13px;
+}
+
+.daedalus-model {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: #e8f1fb;
+  color: #1f4f8f;
+  font-weight: 600;
+}
+
+.daedalus-model.daedalus-affine {
+  background: #fdf0e6;
+  color: #a04000;
+}
+
+.daedalus-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.daedalus-facts dt {
+  color: #4a5b6d;
+}
+
+.daedalus-facts dd {
+  margin: 0;
+}
+
+.daedalus-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.daedalus-table th,
+.daedalus-table td {
+  padding: 3px 6px;
+  border-bottom: 1px solid #eef0f4;
+  text-align: left;
+}
+
+.daedalus-num {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.daedalus-muted {
+  color: #6b7a89;
+  font-size: 12px;
+}
+
+.daedalus-shape {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #1f4f8f;
+}
+
+.daedalus-bars {
+  display: grid;
+  gap: 4px;
+}
+
+.daedalus-bar-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 96px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.daedalus-bar-track {
+  display: block;
+  height: 12px;
+  background: #eef2f7;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.daedalus-bar-track .bar {
+  display: block;
+  height: 100%;
+}
+
+.daedalus-bar-f { background: #d35400; }
+.daedalus-bar-critical { background: #7f8c8d; }
+.daedalus-bar-similar { background: #3a7bd5; }
+.daedalus-bar-affine { background: #a04000; }
+
+.daedalus-warnings {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+}
+
+.daedalus-warnings li {
+  margin: 2px 0;
+}
+
+@media (max-width: 480px) {
+  .daedalus-boards,
+  .daedalus-results {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}

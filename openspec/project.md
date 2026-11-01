@@ -1,7 +1,7 @@
 # Project Context
 
 ## Purpose
-Daedalus provides world-file fitting for a known target CRS in Maplat V3.1.
+Daedalus provides world-file fitting for a known target CRS in Maplat.
 
 ## Tech Stack
 - TypeScript (planned)

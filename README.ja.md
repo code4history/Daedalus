@@ -6,10 +6,30 @@
 
 - Input: GCPs plus a single CRS
 - Output: `world_file_basic` and post-shear refinement
-- Runtime: Node.js と browser。browser は**行ごとに実績が違う**ため 3 段に分けて書く（m3-t1）。**(1) バンドル可能性 = 検証済**: Teiresias の `pnpm run verify:demo-bundle`（`scripts/verify-demo-browser-bundle.mjs`）が demo build の出力チャンクを走査し、Node 固有指定子が残っていないことと Daedalus 由来コードが実在することを機械検証する（CI から継続的に走る）。**(2) 実ブラウザでの実行 = 観測済（「検証済」ではない）**: 2026-08-29 に Teiresias デモを実ブラウザで **1 回観測**した（m3-t1/AC-16）。1 回の観測は自動検査ではない ∴ 回帰を守らない。**(3) CI 上での継続的・自動のブラウザ実行と canvas ドラッグの自動操作 = 未検証**（Cycle 1 の既知欠落）。`Daedalus/src` は本件のために 1 バイトも変更していない（m0 凍結を解いていない）
+- Runtime: Node.js とブラウザ。ブラウザでの対応は 3 段に分けて書きます。**(1) バンドルできること = 検証済み**: Teiresias の `pnpm run verify:demo-bundle`（`scripts/verify-demo-browser-bundle.mjs`）がデモのビルドの出力チャンクを走査し、Node 固有の指定子が残っていないことと Daedalus 由来のコードが実在することを機械で検証します（CI から継続的に走ります）。**(2) 実ブラウザでの実行 = 手動で 1 回確認済み**: 2026-08-29 に Teiresias のデモを実ブラウザで動かして確かめました。1 回の手動確認は自動テストではないため、回帰は防げません。**(3) CI での継続的・自動のブラウザ実行 = 未対応**（予定。[#4](https://github.com/code4history/Daedalus/issues/4) を参照）。
 - Scope: fitting only, not CRS candidate lookup
 
 English README is [here](./README.md).
+
+## デモ
+
+デモは GitHub Pages で公開しています: <https://code4history.dev/Daedalus/>（当てはめのページは [`demo/worldfile-fit.html`](https://code4history.dev/Daedalus/demo/worldfile-fit.html)）。`pnpm run dev` で同じページが手元で開きます。プリセットのボタンで、明確に違う結果になる GCP の組を切り替えられます。
+
+- **モデル**: 回転と縮尺だけの地図は相似で当たり、同じ点に横方向の shear を加えると affine に切り替わります（F は臨界値を大きく超えます）。
+- **点の数**: GCP 2 点は `preview`（仮の答え）、3 点は `adoptable` でも affine を評価せず、5 点で affine を評価して F の棒が出ます。
+- **点の並び**: 一直線に近い組だけが `nearCollinearSource` を出し、affine を評価しません。
+- **誤った点**: 1 点を約 75 m ずらしても品質の札は `adoptable` のままで、その点の長い残差の矢印と RMS でだけ見えます。品質の札は点の数で決まる判定で、誤差の大きさは見ません（デモでも札の横にそう書いています）。
+- **点のドラッグ**: 点を手で動かすと、プリセットのボタンの押下が外れ、見え方の 1 行は「プリセットではない入力」の説明に替わります。
+
+## インストール
+
+Node.js >= 22（またはバンドラ経由のブラウザ）が必要です。
+
+<!-- release-pinned:start -->
+```sh
+pnpm add @c4h/daedalus
+```
+<!-- release-pinned:end -->
 
 ## 公開 API
 
@@ -20,6 +40,21 @@ const result = fitWorldFile(gcps, options);
 
 `fitWorldFile` と型のみが公開である。affine / F 検定の helper は package-internal であり
 `src/index.ts` からは export しない。
+
+### 型
+
+| 名前 | 表すもの |
+|---|---|
+| `GcpPair` | 対応点 1 組。`pixel` `[u, v]` と `geo` `[X, Y]`。 |
+| `GeoBasis` | `geo` の表し方。`{ kind: 'lonlat_deg', axisOrder: 'lon-lat' }` か `{ kind: 'planar_xy', axisOrder: 'xy', unit: 'm' \| 'ft' }`。 |
+| `FitOptions` | `fitWorldFile` の option（下の表）。 |
+| `FitResult` | 戻り値（下の観測契約を参照）。 |
+| `WorldFile` | ワールドファイルの 6 つのパラメータ `xScale`・`xSkew`・`xOrigin`・`ySkew`・`yScale`・`yOrigin`。 |
+| `QualityGate` | `'adoptable' \| 'preview' \| 'unusable'`。 |
+| `FitStatus` | `'ok' \| 'ok_with_warnings' \| 'insufficient' \| 'failed'`。 |
+| `FitWarning` | `{ code: WarningCode; detail?: string }`。 |
+| `WarningCode` | 「warning コードと判定順序」に挙げた warning コード。 |
+| `MaybePromise` | `MaybePromise<T> = T \| Promise<T>`（補助の型）。 |
 
 ### `FitOptions`
 
@@ -81,7 +116,7 @@ affine の残差自由度は `df2 = 2n-6` である。採用は次の**両方**�
 
 `holdout` を指定した場合はさらに `holdoutRmsAffine <= holdoutRmsSimilarity` を要求する。
 
-**SSE の数値的ゼロ**は厳密比較ではなく許容つきで判定する（仕様正本の「数値許容内の厳密適合」）。
+**SSE の数値的ゼロ**は厳密比較ではなく許容つきで判定する（「数値許容内の厳密適合」）。
 
 ```
 epsSSE = 1024 · Number.EPSILON² · Σ(X² + Y²)      （和は training GCP の geo 座標）
@@ -92,7 +127,7 @@ Z(s)   = (s <= epsSSE)
 - `Z(SSE6)` かつ `¬Z(SSE4)`: `F = +Infinity` として F gate を通す
 
 `alpha = 0.05` / `minRelativeImprovement = 0.01` / 安全係数 `1024` は実データで較正した値ではなく、
-Cycle 1 の過適合抑制のための初期ヒューリスティック（仮仕様）である。
+過適合抑制のための初期ヒューリスティックである。
 
 ### `debug`（`options.debug` が真のときのみ）
 
@@ -104,21 +139,29 @@ Cycle 1 の過適合抑制のための初期ヒューリスティック（仮仕
 | `fStatistic` / `criticalF` / `relativeImprovement` | F gate を評価したとき |
 | `holdoutRmsSimilarity` / `holdoutRmsAffine` | `holdout` を指定して検証に到達したとき |
 
-### 非目標（Cycle 1）
+### 非目標
+
+次のものには対応していません。将来の版の候補として [#3](https://github.com/code4history/Daedalus/issues/3)（検証・重み・ロバスト推定・広域など）と [#4](https://github.com/code4history/Daedalus/issues/4)（CI でのブラウザ実行）で扱います。
 
 - LOO（leave-one-out）validation（未指定 holdout は `validationSkipped`）
 - 一般形 `criticalF`（df1≠2 の不完全ベータ）
 - weight / robust fitting / 逆写像 RMS の高度化 / アンチメリディアン・極域
+- CI での継続的・自動のブラウザ実行（上の「Runtime」を参照）
 
-## 関連文書
+## 開発
 
-- [CRS 推定ライブラリ群 仮仕様正本](../docs/superpowers/specs/2026-08-27-c1-crs-libs-provisional-spec.md) —
-  本 package の観測契約・数値挙動が集約されている（**仮仕様**であり人間承認済みの確定仕様ではない）。
-- [mock transformer 契約文書](../docs/superpowers/specs/2026-08-28-mock-transformer-contract.md) —
-  `src/testkit/` が提供する mock adapter の契約。
+- `pnpm run dev`: デモをローカルで開く
+- `pnpm run test` / `pnpm run typecheck` / `pnpm run test:types`: テスト・型検査・公開型の検査
+- `pnpm run build`: パッケージを `dist/` に build
+- `pnpm run verify:demo`: GitHub Pages 用のデモを `dist-demo/` に build して確かめる
 
-上記リンクは**親リポジトリ（monorepo）を checkout したときにのみ解決する**。
-本 repository を単体で clone した場合、`../docs/` は存在しない。
+このリポジトリだけを単独で install するとき（より大きな pnpm workspace の外）は、先に CI の設定を
+写してください: `cp ci/pnpm-workspace.ci.yaml pnpm-workspace.yaml && pnpm install --frozen-lockfile`。
+写した `pnpm-workspace.yaml` は commit しないでください。
+
+`pnpm publish` の前に `prepublishOnly`（test・typecheck・test:types・build・verify:demo）が走ります。
+公開は GitHub Actions（`.github/workflows/publish.yml`）から行います。変更の記録は
+[CHANGELOG.md](./CHANGELOG.md) にあります。
 
 ## ライセンス
 

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daedalus World-file Fitting Demo</title>
+  <link rel="stylesheet" href="./demo-shell.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body class="c4h-app" data-demo-auto-init="true">
+  <header class="c4h-header">
+    <a class="c4h-back-link" href="../index.html">← デモ一覧</a>
+    <h1>Daedalus - World-file Fitting Demo</h1>
+    <span id="status" class="c4h-status">初期化中...</span>
+  </header>
+
+  <section class="daedalus-presets" aria-label="プリセット">
+    <div id="preset-bar" class="daedalus-preset-bar"></div>
+    <p class="daedalus-expectation"><strong>見え方:</strong> <span id="preset-expectation"></span></p>
+  </section>
+
+  <div id="error" class="c4h-error"></div>
+
+  <div class="daedalus-boards">
+    <div class="c4h-panel-wrap">
+      <div class="c4h-panel-label">入力: pixel（地図画像の座標・v 軸は上向き・原点は左下）— 点はドラッグできる</div>
+      <canvas id="pixel-canvas" class="daedalus-board" width="420" height="320"></canvas>
+    </div>
+    <div class="c4h-panel-wrap">
+      <div class="c4h-panel-label">入力: CRS の平面座標（京都駅付近・JGD2011 平面直角 VI 系・m）と残差の矢印</div>
+      <canvas id="geo-canvas" class="daedalus-board" width="420" height="320"></canvas>
+      <div id="residual-scale" class="daedalus-muted"></div>
+    </div>
+  </div>
+
+  <div class="daedalus-results">
+    <section class="c4h-card daedalus-card">
+      <h2>採用したモデル</h2>
+      <p id="model-label" class="daedalus-model">—</p>
+      <dl class="daedalus-facts">
+        <dt>qualityGate</dt>
+        <dd><code id="quality-gate">—</code> <span id="quality-text" class="daedalus-muted"></span></dd>
+        <dt>status</dt>
+        <dd><code id="fit-status">—</code></dd>
+        <dt>rmsMeters</dt>
+        <dd id="rms">—</dd>
+      </dl>
+    </section>
+
+    <section class="c4h-card daedalus-card">
+      <h2>world file の 6 値</h2>
+      <table class="daedalus-table">
+        <tbody id="worldfile-body"></tbody>
+      </table>
+      <p id="similar-shape" class="daedalus-shape"></p>
+    </section>
+
+    <section class="c4h-card daedalus-card">
+      <h2>F 検定（affine にする価値があるか）</h2>
+      <p id="f-text"></p>
+      <div id="f-bars" class="daedalus-bars"></div>
+      <h3>SSE（相似と affine）</h3>
+      <p id="sse-text" class="daedalus-muted"></p>
+      <div id="sse-bars" class="daedalus-bars"></div>
+      <p class="daedalus-muted">棒は対数目盛り。</p>
+    </section>
+
+    <section class="c4h-card daedalus-card">
+      <h2>warning</h2>
+      <ul id="warning-list" class="daedalus-warnings"></ul>
+      <h3>残差（実際の位置 − world file で写した位置・m）</h3>
+      <table class="daedalus-table">
+        <thead>
+          <tr><th>#</th><th>dx</th><th>dy</th><th>長さ</th></tr>
+        </thead>
+        <tbody id="residual-body"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <footer class="c4h-portal-footer" id="version"></footer>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
