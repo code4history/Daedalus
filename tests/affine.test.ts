@@ -4,12 +4,11 @@ import { criticalF, fStatistic, fitAffine, relativeImprovement } from '../src/fi
 import type { GcpPair } from '../src/types.js';
 
 /**
- * m0-t2 / AC-m0-4・AC-m0-5 のテスト。
- * 設計正本: docs/superpowers/specs/2026-08-28-m0-t2-maplat-v4-crs-libs-task-design.md v1.2
+ * affine の自由度分岐・F gate・εSSE 分岐・holdout 検証のテスト。
  *
  * fixture はすべて決定的（乱数なし）で、tolerance と点数をテスト名へ明記する。
- * 厳密値依存テストの成立機構（設計 §4.4）:
- *   - SSE 系の「ゼロ」判定は §3.4 の数値許容 εSSE で成立させる（fixture 座標の2進表現に依存しない）
+ * 厳密値依存テストの成立機構:
+ *   - SSE 系の「ゼロ」判定は数値許容 εSSE で成立させる（fixture 座標の2進表現に依存しない）
  *   - collinearityThreshold=0 の完全共線 skip だけは許容を持たない厳密比較なので、
  *     pixel を整数座標に制約して det M と λ2 を厳密 0 にする
  */
@@ -23,7 +22,7 @@ import type { GcpPair } from '../src/types.js';
  *   X = 2u + 0.5v + 100 、 Y = -0.25u + 3v + 200
  * similarity では表現できない（xScale≠yScale かつ xSkew≠-ySkew）。
  * 実測: SSE4 = 0.9417613636363448 、SSE6 = 0 、εSSE = 1.3017069527698817e-23
- * ∴ Z(SSE6) ∧ ¬Z(SSE4) → F = +Infinity で採用（設計 §3.4 / §5-6）。
+ * ∴ Z(SSE6) ∧ ¬Z(SSE4) → F = +Infinity で採用。
  */
 const FX_EXACT_AFFINE: readonly GcpPair[] = [
   { pixel: [0, 0] as const, geo: [100, 200] as const },
@@ -61,7 +60,7 @@ const FX_F_FAIL: readonly GcpPair[] = [
 ];
 
 /**
- * FX_SIMILARITY_EXACT: AC-m0-1 と同型（a=1.5, b=0.3, tx=100, ty=-50 の厳密 Helmert）。
+ * FX_SIMILARITY_EXACT: similarity.test.ts の Helmert fixture と同型（a=1.5, b=0.3, tx=100, ty=-50 の厳密 Helmert）。
  * 実測: SSE4 = 1.0097419586828951e-28 ≤ εSSE = 3.1589666105778918e-24 ∴ Z(SSE4) 成立。
  */
 const FX_SIMILARITY_EXACT: readonly GcpPair[] = [
@@ -74,7 +73,7 @@ const FX_SIMILARITY_EXACT: readonly GcpPair[] = [
 
 /**
  * FX_COLLINEAR5: pixel が完全共線（整数座標のため det M と λ2 が厳密 0）。
- * collinearityThreshold=0 でも skip されることの検証に使う（設計 §4.4 の fixture 制約）。
+ * collinearityThreshold=0 でも skip されることの検証に使う。
  */
 const FX_COLLINEAR5: readonly GcpPair[] = [
   { pixel: [0, 0] as const, geo: [100, -50] as const },
@@ -105,10 +104,10 @@ const expectedSseZeroTolerance = (gcps: readonly GcpPair[]): number => {
 };
 
 // ---------------------------------------------------------------------------
-// AC-m0-4: 自由度分岐・F gate・option 境界
+// 自由度分岐・F gate・option 境界
 // ---------------------------------------------------------------------------
 
-describe('AC-m0-4: affine 自由度分岐と F gate', () => {
+describe('affine 自由度分岐と F gate', () => {
   test('n=3 は affineSkippedInsufficientDof で similarity を返す (3pts)', () => {
     const r = fitWorldFile(FX_N3);
     expect(r.similarityOnly).toBe(true);
@@ -149,10 +148,10 @@ describe('AC-m0-4: affine 自由度分岐と F gate', () => {
     expect(wf.yScale).toBeCloseTo(3, 9);
     expect(wf.yOrigin).toBeCloseTo(200, 9);
     expect(r.qualityGate).toBe('adoptable');
-    // holdout 未指定なので validationSkipped のみが立つ（設計 §3.7 #8）
+    // holdout 未指定なので validationSkipped のみが立つ
     expect(codes(r)).toEqual(['validationSkipped']);
     expect(r.status).toBe('ok_with_warnings');
-    // 選択モデルの training RMS（設計 §3.7）
+    // 選択モデルの training RMS
     expect(r.rmsMeters).not.toBeNull();
     expect(r.rmsMeters!).toBeCloseTo(0, 9);
   });
@@ -259,7 +258,7 @@ describe('AC-m0-4: affine 自由度分岐と F gate', () => {
     expect(r.similarityOnly).toBe(true);
     expect(codes(r)).toContain('nearCollinearSource');
     expect(codes(r)).toContain('affineSkippedCollinear');
-    // 共線 skip では holdout 検証に到達しない ∴ validationSkipped は出ない（設計 §3.7 ※）
+    // 共線 skip では holdout 検証に到達しない ∴ validationSkipped は出ない
     expect(codes(r)).not.toContain('validationSkipped');
     expect(r.worldFile).not.toBeNull();
     expect(r.qualityGate).toBe('adoptable');
@@ -290,21 +289,21 @@ describe('AC-m0-4: affine 自由度分岐と F gate', () => {
     expect(Number.isNaN(fStatistic(6, 1, 0))).toBe(true);
     expect(Number.isNaN(fStatistic(6, 1, Number.NaN))).toBe(true);
     expect(relativeImprovement(4, 1)).toBe(0.75);
-    // Z(SSE4) 相当（SSE4 が正でない）のとき相対改善は 0 とする（設計 §3.5）
+    // Z(SSE4) 相当（SSE4 が正でない）のとき相対改善は 0 とする
     expect(relativeImprovement(0, 0)).toBe(0);
   });
 });
 
 // ---------------------------------------------------------------------------
-// AC-m0-4: εSSE（数値的ゼロ）分岐
+// εSSE（数値的ゼロ）分岐
 // ---------------------------------------------------------------------------
 
-describe('AC-m0-4: εSSE 数値的ゼロ分岐', () => {
+describe('εSSE 数値的ゼロ分岐', () => {
   test('debug.sseZeroTolerance は 1024·Number.EPSILON²·Σ(X²+Y²) の再計算値と一致する (5pts)', () => {
     for (const fx of [FX_SIMILARITY_EXACT, FX_GATE_PASS, FX_EXACT_AFFINE]) {
       const r = fitWorldFile(fx, { debug: true });
       expect(r.debug!.sseZeroTolerance).toBe(expectedSseZeroTolerance(fx));
-      // 設計 §3.8: sseZeroTolerance は sseSimilarity と同時に存在する
+      // sseZeroTolerance は sseSimilarity と同時に存在する
       expect(r.debug!.sseSimilarity).toBeDefined();
     }
   });
@@ -323,7 +322,7 @@ describe('AC-m0-4: εSSE 数値的ゼロ分岐', () => {
     expect(r.similarityOnly).toBe(true);
     expect(codes(r)).toContain('affineRejectedNonImproving');
     expect(codes(r)).toContain('validationSkipped');
-    // F gate は評価しない（設計 §3.4 / §3.7 #4）
+    // F gate は評価しない
     expect(d.fStatistic).toBeUndefined();
     expect(d.criticalF).toBeUndefined();
     expect(d.relativeImprovement).toBeUndefined();
@@ -341,10 +340,10 @@ describe('AC-m0-4: εSSE 数値的ゼロ分岐', () => {
 });
 
 // ---------------------------------------------------------------------------
-// AC-m0-5: holdout と validation
+// holdout と validation
 // ---------------------------------------------------------------------------
 
-describe('AC-m0-5: holdout 検証', () => {
+describe('holdout 検証', () => {
   test('holdout 未指定なら validationSkipped を出す (5pts)', () => {
     const r = fitWorldFile(FX_GATE_PASS);
     expect(codes(r)).toContain('validationSkipped');

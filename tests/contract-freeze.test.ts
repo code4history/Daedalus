@@ -6,8 +6,8 @@
  * `QualityGate`（3 値）/ `WorldFile` のキー集合（6 キー）。
  * **追加も削除もコンパイルエラーになる双方向検査**を、値配列と条件型で書く。
  *
- * 【凍結対象から除外するもの（設計 K7）】
- * - `FitResult.debug` の形状: m0-t2 が拡張予定の診断用非契約面であるため凍結しない。
+ * 【凍結対象から除外するもの】
+ * - `FitResult.debug` の形状: 拡張予定の診断用非契約面であるため凍結しない。
  * - `FitOptions` のキー集合: 同上（将来の変更余地を残す）。
  * いずれも Teiresias と共有する境界契約ではなく、凍結すると並行タスクを不当に RED にする。
  *
@@ -17,11 +17,11 @@
  * vitest は esbuild transform で型を捨てるため、`pnpm test` は条件型 assert を素通りする。
  * **ドリフト検出の担い手は `pnpm run test:types`（tsc）のみ**である。
  * ∴ 本ファイルは `package.json` の `scripts.test:types` の対象に結線されている
- * （outer rule-0012。検査は書いた同一変更で scripts へ結線する）。
+ * （検査は書いた同一変更で scripts へ結線する）。
  *
  * 【将来 WarningCode 等を増やすとき】
- * `pnpm run test:types` が RED になる。これは outer rule-0015（契約変更は依存 spec を
- * 同一変更で追随させる）の検出装置であり、契約文書・Teiresias 側の追随を強制する。
+ * `pnpm run test:types` が RED になる。これは「契約変更は依存 spec を
+ * 同一変更で追随させる」という規律の検出装置であり、契約文書・Teiresias 側の追随を強制する。
  */
 import { describe, it, expect } from 'vitest';
 import type { WarningCode, FitStatus, QualityGate, WorldFile } from '../src/types.js';
