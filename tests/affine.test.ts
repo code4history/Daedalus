@@ -89,10 +89,10 @@ const FX_N3: readonly GcpPair[] = FX_SIMILARITY_EXACT.slice(0, 3);
 const codes = (r: ReturnType<typeof fitWorldFile>): string[] => r.warnings.map((w) => w.code);
 
 /**
- * εSSE の独立再計算（MIN-R3-1 で選んだ機構: 実装と同一の総和順序で再計算し厳密一致で照合する）。
+ * εSSE の独立再計算（実装と同一の総和順序で再計算し、厳密一致で照合する）。
  * 実装（src/fitting/similarity.ts）も training GCP を index 昇順に走査し、各点で X²+Y² を加える。
  * 総和順序をテストと実装で一致させているため、厳密一致が保証される。
- * 相対 tolerance 比較を採らなかった理由は tests 冒頭のコメントおよび task-state を参照。
+ * 相対 tolerance で比べないのは、総和順序をそろえれば厳密一致で比べられ、許容の幅という根拠の無い値を持ち込まずに済むため。
  */
 const expectedSseZeroTolerance = (gcps: readonly GcpPair[]): number => {
   let sumGeoSq = 0;
