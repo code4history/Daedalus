@@ -1,7 +1,7 @@
 /**
  * CandidateTransformer 契約 8 項目の検証（Daedalus 側 mock の適合確認）。
  *
- * 契約の正本: `docs/superpowers/specs/2026-08-28-mock-transformer-contract.md`（親リポジトリ）
+ * 契約の正本: 親リポジトリの CandidateTransformer 契約の文書
  * 候補カタログ・期待値の機械可読正本: `../src/testkit/mockContractFixture.js`
  *
  * import は package 境界を越えない相対パスで行う。Daedalus 自身のテストであるため
@@ -121,14 +121,14 @@ describe('CandidateTransformer 契約（Daedalus testkit mock）', () => {
   });
 
   it('package shape: exports has only "."', () => {
-    // package 境界の機械的担保（設計 K1）: exports にサブパスが増えたら RED になる。
+    // package 境界の機械的担保: exports にサブパスが増えたら RED になる。
     const packageJson = JSON.parse(
       readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
     ) as { exports: Record<string, unknown> };
     expect(Object.keys(packageJson.exports)).toEqual(['.']);
   });
 
-  it('contract violation simulators stay broken (fixture for m1-t1)', () => {
+  it('contract violation simulators stay broken (fixture for Teiresias)', () => {
     // throwingMockTransformer: 入力によらず常に throw（契約(7) の adapter bug シミュレータ）
     expect(() => throwingMockTransformer(planeAId, contractPoints, geoBasisLonLat)).toThrow();
     expect(() => throwingMockTransformer(unknownId, emptyPoints, geoBasisLonLat)).toThrow();
@@ -143,7 +143,7 @@ describe('CandidateTransformer 契約（Daedalus testkit mock）', () => {
       expectedPlaneA.slice(0, contractPoints.length - 1),
     );
 
-    // null 経路では mockTransformer と同じく null（未定義域を作らない。設計 K13）。
+    // null 経路では mockTransformer と同じく null（未定義域を作らない）。
     expect(brokenLengthMockTransformer(planeAId, emptyPoints, geoBasisLonLat)).toBeNull();
     expect(brokenLengthMockTransformer(unknownId, contractPoints, geoBasisLonLat)).toBeNull();
     expect(brokenLengthMockTransformer(planeAId, outOfBboxPoints, geoBasisLonLat)).toBeNull();

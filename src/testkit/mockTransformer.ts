@@ -1,5 +1,5 @@
 /**
- * CandidateTransformer 契約（`docs/superpowers/specs/2026-08-28-mock-transformer-contract.md`）の
+ * CandidateTransformer 契約（親リポジトリの契約文書）の
  * Daedalus 側 **参照実装**（決定的 mock）と、契約違反シミュレータ 2 種。
  *
  * 【型を import しない理由】
@@ -9,13 +9,13 @@
  * 【候補定義の正本】
  * 候補 id・写像係数・原点・有効域 bbox の機械可読正本は `./mockContractFixture.js` の
  * `candidateDefinitions` であり、本ファイルはそれを import して実装する（数値の二重定義を
- * 作らない。設計 K12）。判定順序（分岐）の正本は本ファイルである。
+ * 作らない）。判定順序（分岐）の正本は本ファイルである。
  *
  * 【package 境界】
  * 本ディレクトリ `src/testkit/` は `package.json` の `exports` に掲載されず（`"."` のみ）、
  * `tsconfig.build.json` により `dist/` へ emit もされない。∴ Teiresias から
- * `@c4h/daedalus/testkit` としても `@c4h/daedalus/dist/testkit/...` としても import できない
- * （設計 K1 / K2）。Teiresias は fixture を **ファイルコピー**して使う。
+ * `@c4h/daedalus/testkit` としても `@c4h/daedalus/dist/testkit/...` としても import できない。
+ * Teiresias は fixture を **ファイルコピー**して使う。
  */
 import { candidateDefinitions } from './mockContractFixture.js';
 
@@ -27,7 +27,7 @@ export type MockGeoBasis =
 /**
  * Teiresias 側 `CandidateTransformer` と構造同形のローカル型。
  * 契約上は `MaybePromise` 返却も適合だが、参照実装は決定性検証を最も単純にする
- * **同期返却**（`MaybePromise` の T 側）とする（設計 K10）。
+ * **同期返却**（`MaybePromise` の T 側）とする。
  */
 export type MockCandidateTransformer = (
   id: string,
@@ -43,10 +43,10 @@ const isSupportedBasis = (geoBasis: MockGeoBasis): boolean =>
  *
  * 判定順序（上から評価し最初に該当した分岐で確定）:
  *  1. `points.length === 0`                              -> null   契約(4)
- *  2. geoBasis が lonlat_deg / lon-lat でない            -> null   契約(7)・設計 K4
- *  3. id がカタログに無い（書式不正を含む）              -> null   契約(7)・設計 K4
+ *  2. geoBasis が lonlat_deg / lon-lat でない            -> null   契約(7)
+ *  3. id がカタログに無い（書式不正を含む）              -> null   契約(7)
  *  4. いずれかの点の lon/lat が非有限                    -> null   契約(5)（部分成功なし）
- *  5. いずれかの点が候補の有効域 bbox 外                 -> null   契約(5)(7)・設計 K4
+ *  5. いずれかの点が候補の有効域 bbox 外                 -> null   契約(5)(7)
  *  6. 上記以外 -> 全点を写像した `Array<[E,N]>`（同順同数）契約(2)(3)(8)
  *
  * **throw する分岐を持たない。** 契約(7) のとおり、適合実装は業務的不能をすべて null で
@@ -102,8 +102,8 @@ export const mockTransformer: MockCandidateTransformer = (id, points, geoBasis) 
 
 /**
  * 違反シミュレータ（契約(7) の「adapter bug」）。
- * **入力によらず常に throw する**（null 系入力を含む全入力域で定義済み。設計 K13）。
- * m1-t1 の失敗系テスト（AC-m1-3）で「throw する adapter」を注入するために使う。
+ * **入力によらず常に throw する**（null 系入力を含む全入力域で定義済み）。
+ * Teiresias の失敗系テストで「throw する adapter」を注入するために使う。
  */
 export const throwingMockTransformer: MockCandidateTransformer = () => {
   throw new Error('mock adapter bug: throwingMockTransformer always throws');
@@ -112,7 +112,7 @@ export const throwingMockTransformer: MockCandidateTransformer = () => {
 /**
  * 違反シミュレータ（契約(6) の長さ不一致）。
  * `mockTransformer` と**同一の判定順序**を評価し、`mockTransformer` が配列を返す入力に対して
- * **のみ**末尾 1 点を欠いた配列を返す。null を返す入力には同じく null を返す（設計 K13）。
+ * **のみ**末尾 1 点を欠いた配列を返す。null を返す入力には同じく null を返す。
  * ∴ 違反注入は成功経路に限られ、空入力で `length - 1 = -1` という未定義域は発生しない。
  */
 export const brokenLengthMockTransformer: MockCandidateTransformer = (id, points, geoBasis) => {

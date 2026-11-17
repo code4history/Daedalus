@@ -153,7 +153,7 @@ export function fitWorldFile(
   let sumU = 0, sumV = 0, sumX = 0, sumY = 0;
   // Σ(X²+Y²)（training geo のみ）。εSSE の材料。
   // 総和順序は「training GCP を index 昇順に走査し、各点で X²+Y² を加える」に固定する。
-  // tests/affine.test.ts はこの順序で再計算し、厳密一致で照合する（MIN-R3-1 の選択機構）。
+  // tests/affine.test.ts はこの順序で再計算し、厳密一致で照合する。
   let sumGeoSq = 0;
   for (let i = 0; i < n; i++) {
     const { pixel, geo } = gcps[i];

@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 // The mock contract fixture is the source of the copy Teiresias keeps in its own tests.
-// Both repositories check their file against the same SHA-256 (fixtureVersion 1.0.1), so
+// Both repositories check their file against the same SHA-256 (fixtureVersion 1.0.2), so
 // the two files stay identical without either repository reading the other.
-const SPECIFIED_SHA256 = '5da3d253e46a0dc6f8710432fc0783a261fbb35ca0c47757b0b204a48fa85495';
+const SPECIFIED_SHA256 = 'ceea43136ab476c8165bb1fd7db6764232815c6871969b67adec3cf8fd2a69cc';
 
 const fixture = fileURLToPath(new URL('../src/testkit/mockContractFixture.ts', import.meta.url));
 
