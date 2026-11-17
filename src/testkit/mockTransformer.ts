@@ -4,7 +4,7 @@
  *
  * 【型を import しない理由】
  * `CandidateTransformer` 型は Teiresias の所有物であり、Daedalus は Atlas / Teiresias を
- * 参照しない（依存方向 C1）。∴ ここでは **構造的に同形のローカル型**を宣言する。
+ * 参照しない（依存は Teiresias から Daedalus への一方向）。∴ ここでは **構造的に同形のローカル型**を宣言する。
  *
  * 【候補定義の正本】
  * 候補 id・写像係数・原点・有効域 bbox の機械可読正本は `./mockContractFixture.js` の
