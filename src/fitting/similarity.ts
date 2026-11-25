@@ -24,6 +24,43 @@ function normalizeOpenUnit(value: number | undefined, fallback: number): number 
   return value;
 }
 
+/** L_geo の関門の既定値（m） */
+const DEFAULT_NORMALIZE_EPSILON_METERS = 100.0;
+
+/** 正の有限値だけを受ける option の正規化。0 以下・非有限は既定値へ落とし warning は足さない。 */
+function normalizePositive(value: number | undefined, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return fallback;
+  return value;
+}
+
+/** 入力不正・使えない結果の共通の返却（分岐 #0）。 */
+function unusableResult(warnings: FitWarning[] = []): FitResult {
+  return {
+    status: 'insufficient',
+    qualityGate: 'unusable',
+    worldFile: null,
+    similarityOnly: true,
+    rmsMeters: null,
+    warnings,
+  };
+}
+
+/**
+ * 返してよい当てはめ結果か。world file の 6 値と RMS が有限で、線形部の行列式が 0 でないこと。
+ * 入力が有限でも、途中の和が桁あふれすると 6 値が 0 や非有限になる ∴ 返す直前に確かめる。
+ */
+function isUsableFit(wf: WorldFile, rmsMeters: number, rmsPixels: number): boolean {
+  if (
+    !Number.isFinite(wf.xScale) || !Number.isFinite(wf.xSkew) || !Number.isFinite(wf.xOrigin) ||
+    !Number.isFinite(wf.ySkew) || !Number.isFinite(wf.yScale) || !Number.isFinite(wf.yOrigin)
+  ) {
+    return false;
+  }
+  if (!Number.isFinite(rmsMeters) || !Number.isFinite(rmsPixels)) return false;
+  const det = wf.xScale * wf.yScale - wf.xSkew * wf.ySkew;
+  return Number.isFinite(det) && det !== 0;
+}
+
 /** affine 診断値（`FitResult.debug` のうち sse / mse を除いた optional 部分） */
 type AffineDebug = Omit<NonNullable<FitResult['debug']>, 'sse' | 'mse'>;
 
@@ -138,8 +175,9 @@ export function fitWorldFile(
      L_geo = Math.sqrt((maxLon - minLon)**2 + (maxLat - minLat)**2);
   }
 
-  const epsilon = opts?.normalizeEpsilonMeters ?? 100.0;
-  if (L_geo < epsilon) {
+  const epsilon = normalizePositive(opts?.normalizeEpsilonMeters, DEFAULT_NORMALIZE_EPSILON_METERS);
+  // 否定形で比べる（L_geo が非有限でも関門を素通りさせない）
+  if (!(L_geo >= epsilon)) {
      return {
       status: 'insufficient',
       qualityGate: 'unusable',
@@ -392,13 +430,19 @@ export function fitWorldFile(
   // 7. status and qualityGate
   const qualityGate = n === 2 ? 'preview' : 'adoptable';
   const status = warnings.length > 0 ? 'ok_with_warnings' : 'ok';
+  const rmsMeters = Math.sqrt(selectedSse / n);
+
+  // 8. 使えない結果（非有限・退化）は返さない（分岐 #0 と同じ形）
+  if (!isUsableFit(selectedWorldFile, rmsMeters, selectedRmsPixels)) {
+    return unusableResult();
+  }
 
   return {
       status,
       qualityGate,
       worldFile: selectedWorldFile,
       similarityOnly,
-      rmsMeters: Math.sqrt(selectedSse / n),
+      rmsMeters,
       rmsPixels: selectedRmsPixels,
       warnings,
       ...(opts?.debug ? { debug: { sse: selectedSse, mse: selectedSse/n, ...affineDebug } } : {})

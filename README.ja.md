@@ -65,7 +65,7 @@ const result = fitWorldFile(gcps, options);
 | `collinearityThreshold` | `0.01` | 閉区間 `[0,1]` | 既定値へ正規化（warning は追加しない） |
 | `alpha` | `0.05` | **開区間** `(0,1)` | `0` / `1` を含む範囲外と非有限は既定値へ正規化 |
 | `minRelativeImprovement` | `0.01` | 閉区間 `[0,1]` | 既定値へ正規化 |
-| `normalizeEpsilonMeters` | `100.0` | 正の実数 | — |
+| `normalizeEpsilonMeters` | `100.0` | 正の有限な実数 | `0` 以下と非有限は既定値へ正規化 |
 | `holdout` | 未指定 | `GcpPair[]` | 非空 holdout に非有限 pixel/geo が 1 つでもあれば入力不正 |
 
 `collinearityThreshold` の `0` は「固有値比が厳密に 0 の完全共線だけを skip」する端点、
@@ -92,7 +92,7 @@ const result = fitWorldFile(gcps, options);
 
 | # | 条件 | `similarityOnly` | worldFile | qualityGate | warnings |
 |---|---|---|---|---|---|
-| 0 | n<2 / training または非空 holdout の非有限 pixel・geo / 全 training pixel 一致 / `L_geo < normalizeEpsilonMeters` / `axisOrder: 'lat-lon'` | `true` | `null` | `unusable` | 空（axisOrder のみ `unsupportedAxisOrder`） |
+| 0 | n<2 / training または非空 holdout の非有限 pixel・geo / 全 training pixel 一致 / `L_geo < normalizeEpsilonMeters` / `axisOrder: 'lat-lon'` / 当てはめた world file の 6 値か RMS が非有限、または線形部の行列式が 0（判定の最後に確かめる） | `true` | `null` | `unusable` | 空（axisOrder のみ `unsupportedAxisOrder`） |
 | 1 | n=2 | `true` | similarity | `preview` | `insufficientPointCount`, `affineSkippedInsufficientDof` |
 | 2 | n=3,4 | `true` | similarity | `adoptable` | `affineSkippedInsufficientDof`（共線なら `nearCollinearSource` も） |
 | 3 | n>=5 かつ λ2/λ1 <= `collinearityThreshold` | `true` | similarity | `adoptable` | `nearCollinearSource`, `affineSkippedCollinear` |
