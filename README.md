@@ -65,7 +65,7 @@ are not exported from `src/index.ts`.
 | `collinearityThreshold` | `0.01` | closed interval `[0,1]` | normalized to the default (no warning is added) |
 | `alpha` | `0.05` | **open** interval `(0,1)` | out of range including `0` / `1`, and non-finite values, are normalized to the default |
 | `minRelativeImprovement` | `0.01` | closed interval `[0,1]` | normalized to the default |
-| `normalizeEpsilonMeters` | `100.0` | positive real number | — |
+| `normalizeEpsilonMeters` | `100.0` | positive finite real number | `0` or less, and non-finite values, are normalized to the default |
 | `holdout` | unspecified | `GcpPair[]` | a non-empty holdout containing even one non-finite pixel/geo value is an invalid input |
 
 For `collinearityThreshold`, `0` is the endpoint that "skips only perfectly collinear inputs whose
@@ -92,7 +92,7 @@ The conditions are evaluated from the top, and the first matching branch determi
 
 | # | condition | `similarityOnly` | worldFile | qualityGate | warnings |
 |---|---|---|---|---|---|
-| 0 | n<2 / non-finite pixel or geo in training or in a non-empty holdout / all training pixels identical / `L_geo < normalizeEpsilonMeters` / `axisOrder: 'lat-lon'` | `true` | `null` | `unusable` | empty (only axisOrder gives `unsupportedAxisOrder`) |
+| 0 | n<2 / non-finite pixel or geo in training or in a non-empty holdout / all training pixels identical / `L_geo < normalizeEpsilonMeters` / `axisOrder: 'lat-lon'` / a fitted world file whose six values or RMS are non-finite, or whose linear part has a zero determinant (checked at the end) | `true` | `null` | `unusable` | empty (only axisOrder gives `unsupportedAxisOrder`) |
 | 1 | n=2 | `true` | similarity | `preview` | `insufficientPointCount`, `affineSkippedInsufficientDof` |
 | 2 | n=3,4 | `true` | similarity | `adoptable` | `affineSkippedInsufficientDof` (plus `nearCollinearSource` when collinear) |
 | 3 | n>=5 and λ2/λ1 <= `collinearityThreshold` | `true` | similarity | `adoptable` | `nearCollinearSource`, `affineSkippedCollinear` |
