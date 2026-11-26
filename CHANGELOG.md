@@ -3,7 +3,7 @@
 このプロジェクトの主な変更を記録します。版数は [Semantic Versioning](https://semver.org/) に従います。
 Notable changes to this project are recorded here. Versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.0-rc.1] - 2026-11-26
 
 ### Added
 - 初版。npm に `@c4h/daedalus` として公開します。主な API は `fitWorldFile`（対応点から相似または affine のワールドファイルを当てはめ、採用の可否・warning・残差を返す）と、その入出力の型（`GcpPair`・`GeoBasis`・`FitOptions`・`FitResult`・`WorldFile` ほか）です。全 export は README の公開 API の節にあります。
